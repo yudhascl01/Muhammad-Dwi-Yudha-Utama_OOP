@@ -5,6 +5,7 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.Player;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Boss;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
+import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -21,20 +22,22 @@ public class Main extends ApplicationAdapter {
     private Fairy fairy;
     private Boss boss;
 
-    private Item pointItem1;
-    private Item pointItem2;
-    private Item pointItem3;
+    private Item powerItem;
+    private Item pointItem;
 
-    private List<GameObject> gameObjects;
+    private List<GameObject> entities;
 
     @Override
     public void create() {
 
         shapeRenderer = new ShapeRenderer();
 
-        gameObjects = new ArrayList<>();
+        entities = new ArrayList<>();
 
-        // Player
+        // ==========================================
+        // PLAYER
+        // ==========================================
+
         player = new Player(
             280,
             40,
@@ -44,7 +47,10 @@ public class Main extends ApplicationAdapter {
             3
         );
 
-        // Fairy
+        // ==========================================
+        // FAIRY
+        // ==========================================
+
         fairy = new Fairy(
             150,
             380,
@@ -52,7 +58,10 @@ public class Main extends ApplicationAdapter {
             20
         );
 
-        // Boss
+        // ==========================================
+        // BOSS
+        // ==========================================
+
         boss = new Boss(
             380,
             400,
@@ -60,45 +69,39 @@ public class Main extends ApplicationAdapter {
             150
         );
 
-        // Items
-        pointItem1 = new Item(
-            100,
+        // ==========================================
+        // ITEMS
+        // ==========================================
+
+        powerItem = new Item(
+            200,
             450,
             16,
             16,
-            100f,
-            "Point Item",
-            1000L
+            80f,
+            ItemType.POWER,
+            500L
         );
 
-        pointItem2 = new Item(
-            200,
-            500,
-            16,
-            16,
+        pointItem = new Item(
+            320,
+            480,
+            12,
+            12,
             120f,
-            "Point Item",
+            ItemType.POINT,
             1000L
         );
 
-        pointItem3 = new Item(
-            300,
-            550,
-            16,
-            16,
-            150f,
-            "Point Item",
-            1000L
-        );
+        // ==========================================
+        // POLYMORPHIC LIST
+        // ==========================================
 
-        // Polymorphic list
-        gameObjects.add(player);
-        gameObjects.add(fairy);
-        gameObjects.add(boss);
-
-        gameObjects.add(pointItem1);
-        gameObjects.add(pointItem2);
-        gameObjects.add(pointItem3);
+        entities.add(player);
+        entities.add(fairy);
+        entities.add(boss);
+        entities.add(powerItem);
+        entities.add(pointItem);
     }
 
     @Override
@@ -106,12 +109,46 @@ public class Main extends ApplicationAdapter {
 
         float delta = Gdx.graphics.getDeltaTime();
 
-        // Polymorphic update
-        for (GameObject obj : gameObjects) {
-            obj.update(delta);
+        // ==========================================
+        // POLYMORPHIC UPDATE
+        // ==========================================
+
+        for (GameObject entity : entities) {
+            entity.update(delta);
         }
 
-        // Clear screen
+        // ==========================================
+        // AABB COLLISION DETECTION
+        // ==========================================
+
+        for (int i = 0; i < entities.size(); i++) {
+
+            for (int j = i + 1; j < entities.size(); j++) {
+
+                GameObject a = entities.get(i);
+                GameObject b = entities.get(j);
+
+                if (a.getCoreHitbox().overlaps(b.getCoreHitbox())) {
+
+                    a.onCollision(b);
+                    b.onCollision(a);
+                }
+            }
+        }
+
+        // ==========================================
+        // REMOVE COLLECTED ITEMS
+        // ==========================================
+
+        entities.removeIf(entity ->
+            entity instanceof Item
+                && ((Item) entity).isCollected()
+        );
+
+        // ==========================================
+        // CLEAR SCREEN
+        // ==========================================
+
         ScreenUtils.clear(
             0.1f,
             0.1f,
@@ -119,13 +156,16 @@ public class Main extends ApplicationAdapter {
             1f
         );
 
-        // Polymorphic render
+        // ==========================================
+        // POLYMORPHIC RENDER
+        // ==========================================
+
         shapeRenderer.begin(
             ShapeRenderer.ShapeType.Filled
         );
 
-        for (GameObject obj : gameObjects) {
-            obj.render(shapeRenderer);
+        for (GameObject entity : entities) {
+            entity.render(shapeRenderer);
         }
 
         shapeRenderer.end();

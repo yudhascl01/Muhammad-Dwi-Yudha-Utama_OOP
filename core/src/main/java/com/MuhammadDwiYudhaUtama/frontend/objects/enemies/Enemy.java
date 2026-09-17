@@ -47,9 +47,11 @@ public class Enemy extends GameObject {
         );
 
         if (wasAlive && getHp() == 0) {
+
             System.out.println(
                 getName() + " was defeated!"
             );
+
             return true;
         }
 
@@ -57,6 +59,7 @@ public class Enemy extends GameObject {
     }
 
     public void attack(Player player, int damage) {
+
         System.out.println(
             getName()
                 + " unleashes bullet barrage on "

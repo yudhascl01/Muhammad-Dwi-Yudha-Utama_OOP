@@ -2,6 +2,9 @@ package com.MuhammadDwiYudhaUtama.frontend.objects;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Enemy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
+import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 
 public class Player extends GameObject {
@@ -13,7 +16,7 @@ public class Player extends GameObject {
     private long score;
 
     public Player(String name, int hp, int power, int spellCards) {
-        super(280, 40, 32, 32, 0, Color.RED);
+        super(280, 40, 32, 32, 250f, Color.RED);
 
         this.name = name;
         this.hp = Math.max(0, hp);
@@ -23,7 +26,7 @@ public class Player extends GameObject {
     }
 
     public Player(float x, float y, String name, int hp, int power, int spellCards) {
-        super(x, y, 32, 32, 0, Color.RED);
+        super(x, y, 32, 32, 250f, Color.RED);
 
         this.name = name;
         this.hp = Math.max(0, hp);
@@ -31,6 +34,60 @@ public class Player extends GameObject {
         this.spellCards = spellCards;
         this.score = 0;
     }
+
+    // ==========================================
+    // PART I - REAL-TIME PLAYER MOVEMENT
+    // ==========================================
+
+    @Override
+    public void update(float delta) {
+        if (Gdx.input != null) {
+
+            // W / UP -> Move Up
+            if (Gdx.input.isKeyPressed(Input.Keys.W)
+                || Gdx.input.isKeyPressed(Input.Keys.UP)) {
+                y += speed * delta;
+            }
+
+            // S / DOWN -> Move Down
+            if (Gdx.input.isKeyPressed(Input.Keys.S)
+                || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+                y -= speed * delta;
+            }
+
+            // A / LEFT -> Move Left
+            if (Gdx.input.isKeyPressed(Input.Keys.A)
+                || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+                x -= speed * delta;
+            }
+
+            // D / RIGHT -> Move Right
+            if (Gdx.input.isKeyPressed(Input.Keys.D)
+                || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+                x += speed * delta;
+            }
+        }
+    }
+
+    // ==========================================
+    // PART II - COLLISION
+    // ==========================================
+
+    @Override
+    public void onCollision(Collidable other) {
+        if (other instanceof Item) {
+            Item item = (Item) other;
+
+            if (!item.isCollected()) {
+                System.out.println("Player touches items");
+                collectItem(item);
+            }
+        }
+    }
+
+    // ==========================================
+    // DAMAGE & COMBAT
+    // ==========================================
 
     public void takeDamage(int damage) {
         setHp(getHp() - damage);
@@ -45,6 +102,7 @@ public class Player extends GameObject {
                 getName() + " took " + damage
                     + " damage! Remaining HP: 0"
             );
+
             System.out.println(
                 getName() + " was defeated (Pichuun~)!"
             );
@@ -70,6 +128,10 @@ public class Player extends GameObject {
         return getHp() > 0;
     }
 
+    // ==========================================
+    // SCORE SYSTEM
+    // ==========================================
+
     public void addScore(long points) {
         if (points > 0) {
             this.score += points;
@@ -81,17 +143,80 @@ public class Player extends GameObject {
         }
     }
 
-    public void collectItem(Item item) {
-        System.out.println(
-            getName() + " collected " + item.getItemType() + "!"
-        );
+    // ==========================================
+    // PART III - COLLECT ITEM
+    // ==========================================
 
-        if (item.getScoreValue() > 0) {
-            addScore(item.getScoreValue());
+    public void collectItem(Item item) {
+
+        if (item == null || item.isCollected()) {
+            return;
         }
+
+        ItemType type = item.getItemTypeEnum();
+
+        if (type != null) {
+
+            switch (type) {
+
+                case POWER -> {
+                    this.power += type.getPowerBonus();
+
+                    addScore(item.getScoreValue());
+
+                    System.out.println(
+                        name + " collected POWER item! "
+                            + "Power increased to " + power
+                    );
+                }
+
+                case POINT -> {
+                    addScore(item.getScoreValue());
+
+                    System.out.println(
+                        name + " collected POINT item!"
+                    );
+                }
+
+                case BOMB -> {
+                    this.spellCards += 1;
+
+                    addScore(item.getScoreValue());
+
+                    System.out.println(
+                        name + " collected BOMB item! "
+                            + "SpellCards: " + spellCards
+                    );
+                }
+
+                case LIFE -> {
+                    this.hp += 20;
+
+                    addScore(item.getScoreValue());
+
+                    System.out.println(
+                        name + " collected LIFE item! "
+                            + "HP: " + hp
+                    );
+                }
+            }
+
+        } else {
+
+            addScore(item.getScoreValue());
+
+            System.out.println(
+                name + " collected " + item.getItemType() + "!"
+            );
+        }
+
+        // Mark item as collected.
+        item.setCollected(true);
     }
 
-    // Getter & Setter
+    // ==========================================
+    // GETTER & SETTER
+    // ==========================================
 
     public String getName() {
         return name;
@@ -128,17 +253,4 @@ public class Player extends GameObject {
     public long getScore() {
         return score;
     }
-
-    @Override
-    public void onCollision(Collidable other) {
-        // TODO: Cek apakah other yang diterima method ini adalah Item
-        // TODO: Cetak "Player touches items" lalu panggil collectItem((Item) other)
-
-        if(System.out.println(other instanceof Item)) {
-            System.out.println("Player touches items");
-            collectItem((Item) other);
-        }
-
-    }
-
 }
