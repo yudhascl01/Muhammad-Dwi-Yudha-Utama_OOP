@@ -9,9 +9,12 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class Main extends ApplicationAdapter {
@@ -106,68 +109,41 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
-
         float delta = Gdx.graphics.getDeltaTime();
 
-        // ==========================================
-        // POLYMORPHIC UPDATE
-        // ==========================================
-
-        for (GameObject entity : entities) {
-            entity.update(delta);
+        // TODO 1: Jika tombol Z baru saja ditekan, tambahkan bullet baru hasil player.shootBullet() ke dalam list entities.
+        // Clue: Gdx.input.isKeyJustPressed()
+        if (!(Gdx.input.isKeyJustPressed() = 'Z')) {
+        } else {
+            player.shootBullet();
         }
 
-        // ==========================================
-        // AABB COLLISION DETECTION
-        // ==========================================
+        // TODO 2: Panggil updateAndClean(entities, delta, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
+        // untuk meng-update sekaligus membersihkan entity yang destroyed/off-screen.
+        updateAndClean(entities, delta, Gdx.graphics.getWidth());
 
+        // 3. Collision detection antar entity (skip entity yang sudah destroyed)
         for (int i = 0; i < entities.size(); i++) {
-
             for (int j = i + 1; j < entities.size(); j++) {
-
                 GameObject a = entities.get(i);
                 GameObject b = entities.get(j);
 
-                if (a.getCoreHitbox().overlaps(b.getCoreHitbox())) {
-
-                    a.onCollision(b);
-                    b.onCollision(a);
+                if (!a.isDestroyed() && !b.isDestroyed()) {
+                    if (a.getCoreHitbox().overlaps(b.getCoreHitbox())) {
+                        a.onCollision(b);
+                        b.onCollision(a);
+                    }
                 }
             }
         }
 
-        // ==========================================
-        // REMOVE COLLECTED ITEMS
-        // ==========================================
+        ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1f);
 
-        entities.removeIf(entity ->
-            entity instanceof Item
-                && ((Item) entity).isCollected()
-        );
-
-        // ==========================================
-        // CLEAR SCREEN
-        // ==========================================
-
-        ScreenUtils.clear(
-            0.1f,
-            0.1f,
-            0.15f,
-            1f
-        );
-
-        // ==========================================
-        // POLYMORPHIC RENDER
-        // ==========================================
-
-        shapeRenderer.begin(
-            ShapeRenderer.ShapeType.Filled
-        );
-
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         for (GameObject entity : entities) {
-            entity.render(shapeRenderer);
+            // TODO 3: Gunakan if statement untuk mengecek apakah entity belum hancur (!entity.isDestroyed()).
+            // kalo iya, panggil method entity.render(shapeRenderer);
         }
-
         shapeRenderer.end();
     }
 
@@ -178,4 +154,26 @@ public class Main extends ApplicationAdapter {
             shapeRenderer.dispose();
         }
     }
+
+    public <T extends GameObject> void updateAndClean(List<T> list, float delta, float screenWidth, float screenHeight) {
+        // 1. Dapatkan Iterator<T> dari list yang diberikan.
+
+        // 2. Selama masih ada elemen berikutnya (hasNext()):
+        //    a. Ambil elemen saat ini menggunakan next(), simpan ke variabel bertipe T.
+        //    b. Panggil update(delta) pada elemen tersebut.
+        //    c. Jika elemen tersebut isOffScreen(screenWidth, screenHeight) ATAU isDestroyed():
+        //       - Tampilkan pesan: "Removed via Generic Iterator: " + [nama class entity, pakai getClass().getSimpleName()]
+        //       - Hapus elemen ini dari list menggunakan method milik Iterator (BUKAN list.remove()!).
+        MapLayers objects = null;
+        Iterator<MapLayer> iterator = objects.iterator();
+
+        while (iterator.hasNext()) {
+            T object = iterator.next();
+
+            if (object.destroyed) {
+                iterator.remove();
+            }
+        }
+    }
+
 }

@@ -1,11 +1,14 @@
 package com.MuhammadDwiYudhaUtama.frontend.objects;
 
+import com.MuhammadDwiYudhaUtama.frontend.objects.bullets.Bullet;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Enemy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+
+import static com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType.*;
 
 public class Player extends GameObject {
 
@@ -122,6 +125,25 @@ public class Player extends GameObject {
         if (defeated) {
             addScore(target.getScoreValue());
         }
+    }
+
+    // ==========================================
+    // PART V - BULLET
+    // ==========================================
+
+    public Bullet shootBullet() {
+        int damage = 10 + power;
+
+        System.out.println(
+            name + " shoots bullet dealing " + damage + " DMG!"
+        );
+
+        return new Bullet(
+            x + width / 2 - 4,
+            y + height,
+            BulletType.AMULET,
+            damage
+        );
     }
 
     public boolean isAlive() {
@@ -253,4 +275,31 @@ public class Player extends GameObject {
     public long getScore() {
         return score;
     }
+
+    void collectItem(Item item) {
+        if (item.isDestroyed()) return; // Mencegah item diambil dua kali di frame yang sama
+        // ... switch-case type item yang sudah kalian buat sebelumnya ...
+        switch (item) {
+            case POWER:
+                POWER.isDestroyed();
+                break;
+
+            case POINT:
+                POINT.isDestroyed();
+                break;
+
+            case BOMB:
+                BOMB.isDestroyed();
+                break;
+
+            case LIFE:
+                LIFE.isDestroyed();
+                break;
+
+        }
+        // TODO: Tandai item ini sebagai destroyed agar nanti dihapus oleh Iterator
+        // Panggil method destroy() milik item di sini!
+        item.isDestroyed();
+    }
+
 }

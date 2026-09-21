@@ -3,15 +3,21 @@ package com.MuhammadDwiYudhaUtama.frontend.objects;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.Input;
+import java.util.Iterator;
+
 
 public abstract class GameObject implements Collidable {
 
+    public boolean destroyed;
     protected float x;
     protected float y;
     protected float width;
     protected float height;
     protected float speed;
     protected Color color;
+
+    protected boolean active = true;
 
     public GameObject(float x, float y, float width, float height,
                       float speed, Color color) {
@@ -28,8 +34,25 @@ public abstract class GameObject implements Collidable {
     }
 
     public void render(ShapeRenderer shapeRenderer) {
-        shapeRenderer.setColor(color);
-        shapeRenderer.rect(x, y, width, height);
+        if (shapeRenderer != null && color != null && active) {
+            shapeRenderer.setColor(color);
+            shapeRenderer.rect(x, y, width, height);
+        }
+    }
+
+    public boolean isDestroyed() {
+        return !active;
+    }
+
+    public void destroy() {
+        active = false;
+    }
+
+    public boolean isOffScreen(float screenWidth, float screenHeight) {
+        return x < -50
+            || x > screenWidth + 50
+            || y < -50
+            || y > screenHeight + 50;
     }
 
     // Getter dan Setter

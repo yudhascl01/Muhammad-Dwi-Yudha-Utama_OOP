@@ -18,21 +18,37 @@ public class Enemy extends GameObject {
         this.hp = Math.max(0, hp);
         this.maxHp = Math.max(0, hp);
         this.scoreValue = 100L;
+
+        if (this.hp <= 0) {
+            destroy();
+        }
     }
 
     public Enemy(float x, float y, float width, float height,
                  Color color, String name, int hp, long scoreValue) {
+
         super(x, y, width, height, 0, color);
 
         this.name = name;
         this.hp = Math.max(0, hp);
         this.maxHp = Math.max(0, hp);
         this.scoreValue = scoreValue;
+
+        if (this.hp <= 0) {
+            destroy();
+        }
+    }
+
+    public static void TakeDamage() {
     }
 
     public boolean takeDamage(int damage) {
 
-        if (getHp() <= 0) {
+        if (!isAlive()) {
+            return false;
+        }
+
+        if (damage <= 0) {
             return false;
         }
 
@@ -48,6 +64,8 @@ public class Enemy extends GameObject {
 
         if (wasAlive && getHp() == 0) {
 
+            destroy();
+
             System.out.println(
                 getName() + " was defeated!"
             );
@@ -60,6 +78,10 @@ public class Enemy extends GameObject {
 
     public void attack(Player player, int damage) {
 
+        if (!isAlive()) {
+            return;
+        }
+
         System.out.println(
             getName()
                 + " unleashes bullet barrage on "
@@ -70,7 +92,7 @@ public class Enemy extends GameObject {
     }
 
     public boolean isAlive() {
-        return getHp() > 0;
+        return getHp() > 0 && !isDestroyed();
     }
 
     // Getter & Setter
@@ -89,6 +111,10 @@ public class Enemy extends GameObject {
 
     public void setHp(int hp) {
         this.hp = Math.max(0, hp);
+
+        if (this.hp == 0) {
+            destroy();
+        }
     }
 
     public int getMaxHp() {
