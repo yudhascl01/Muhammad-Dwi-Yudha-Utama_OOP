@@ -8,7 +8,11 @@ public class Boss extends Enemy {
 
     private float collisionCooldown;
 
-    public Boss(String name, int hp) {
+    public Boss(
+        String name,
+        int hp
+    ) {
+
         super(
             380,
             400,
@@ -23,7 +27,13 @@ public class Boss extends Enemy {
         this.collisionCooldown = 0f;
     }
 
-    public Boss(float x, float y, String name, int hp) {
+    public Boss(
+        float x,
+        float y,
+        String name,
+        int hp
+    ) {
+
         super(
             x,
             y,
@@ -38,13 +48,11 @@ public class Boss extends Enemy {
         this.collisionCooldown = 0f;
     }
 
-    // ==========================================
-    // BONUS - COLLISION COOLDOWN
-    // ==========================================
-
     @Override
     public void update(float delta) {
+
         if (collisionCooldown > 0f) {
+
             collisionCooldown -= delta;
 
             if (collisionCooldown < 0f) {
@@ -53,12 +61,10 @@ public class Boss extends Enemy {
         }
     }
 
-    // ==========================================
-    // SOAL 4 - COLLISION
-    // ==========================================
-
     @Override
-    public void onCollision(Collidable other) {
+    public void onCollision(
+        Collidable other
+    ) {
 
         if (other instanceof Player) {
 

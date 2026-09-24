@@ -11,86 +11,144 @@ public class Item extends GameObject {
     private long scoreValue;
     private ItemType itemTypeEnum;
 
-    // BONUS - menentukan apakah item sudah dikoleksi
     private boolean collected;
 
-    public Item(float x, float y, String itemType) {
-        super(x, y, 16, 16, 100f, Color.WHITE);
+    public Item(
+        float x,
+        float y,
+        String itemType
+    ) {
+
+        super(
+            x,
+            y,
+            16,
+            16,
+            100f,
+            Color.WHITE
+        );
 
         this.itemType = itemType;
         this.scoreValue = 1000L;
         this.collected = false;
     }
 
-    public Item(float x, float y, float width, float height,
-                float speed, String itemType) {
+    public Item(
+        float x,
+        float y,
+        float width,
+        float height,
+        float speed,
+        String itemType
+    ) {
 
-        super(x, y, width, height, speed, Color.WHITE);
+        super(
+            x,
+            y,
+            width,
+            height,
+            speed,
+            Color.WHITE
+        );
 
         this.itemType = itemType;
         this.scoreValue = 1000L;
         this.collected = false;
     }
 
-    public Item(float x, float y, float width, float height,
-                float speed, String itemType, long scoreValue) {
+    public Item(
+        float x,
+        float y,
+        float width,
+        float height,
+        float speed,
+        String itemType,
+        long scoreValue
+    ) {
 
-        super(x, y, width, height, speed, Color.WHITE);
+        super(
+            x,
+            y,
+            width,
+            height,
+            speed,
+            Color.WHITE
+        );
 
         this.itemType = itemType;
         this.scoreValue = scoreValue;
         this.collected = false;
     }
 
-    public Item(float x, float y, ItemType itemTypeEnum) {
+    public Item(
+        float x,
+        float y,
+        ItemType itemTypeEnum
+    ) {
 
-        super(x, y, 16, 16, 100f, Color.WHITE);
+        super(
+            x,
+            y,
+            16,
+            16,
+            100f,
+            Color.WHITE
+        );
 
         this.itemTypeEnum = itemTypeEnum;
         this.itemType = itemTypeEnum.name();
-        this.scoreValue = itemTypeEnum.getScoreValue();
+        this.scoreValue =
+            itemTypeEnum.getScoreValue();
+
         this.collected = false;
     }
 
-    public Item(float x, float y, float width, float height,
-                float speed, ItemType itemTypeEnum, long scoreValue) {
+    public Item(
+        float x,
+        float y,
+        float width,
+        float height,
+        float speed,
+        ItemType itemTypeEnum,
+        long scoreValue
+    ) {
 
-        super(x, y, width, height, speed, Color.WHITE);
+        super(
+            x,
+            y,
+            width,
+            height,
+            speed,
+            Color.WHITE
+        );
 
         this.itemTypeEnum = itemTypeEnum;
         this.itemType = itemTypeEnum.name();
         this.scoreValue = scoreValue;
         this.collected = false;
     }
-
-    // ==========================================
-    // SOAL 5 - COLLISION
-    // ==========================================
 
     @Override
-    public void onCollision(Collidable other) {
+    public void onCollision(
+        Collidable other
+    ) {
 
         if (other instanceof Player) {
-            // Item pickup is handled on the Player side
-            // via collectItem()
+            // Item pickup ditangani oleh Player.
         }
     }
-
-    // ==========================================
-    // ITEM UPDATE
-    // ==========================================
 
     @Override
     public void update(float delta) {
 
-        if (!collected) {
+        if (
+            !collected
+                && !isDestroyed()
+        ) {
+
             this.y -= speed * delta;
         }
     }
-
-    // ==========================================
-    // GETTER
-    // ==========================================
 
     public String getItemType() {
         return itemType;
@@ -108,7 +166,9 @@ public class Item extends GameObject {
         return collected;
     }
 
-    public void setCollected(boolean collected) {
+    public void setCollected(
+        boolean collected
+    ) {
         this.collected = collected;
     }
 }

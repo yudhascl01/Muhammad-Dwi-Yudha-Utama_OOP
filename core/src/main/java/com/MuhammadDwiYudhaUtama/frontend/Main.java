@@ -2,15 +2,15 @@ package com.MuhammadDwiYudhaUtama.frontend;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.GameObject;
 import com.MuhammadDwiYudhaUtama.frontend.objects.Player;
+import com.MuhammadDwiYudhaUtama.frontend.objects.bullets.Bullet;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Boss;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.maps.MapLayer;
-import com.badlogic.gdx.maps.MapLayers;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
@@ -37,10 +37,6 @@ public class Main extends ApplicationAdapter {
 
         entities = new ArrayList<>();
 
-        // ==========================================
-        // PLAYER
-        // ==========================================
-
         player = new Player(
             280,
             40,
@@ -50,10 +46,6 @@ public class Main extends ApplicationAdapter {
             3
         );
 
-        // ==========================================
-        // FAIRY
-        // ==========================================
-
         fairy = new Fairy(
             150,
             380,
@@ -61,20 +53,12 @@ public class Main extends ApplicationAdapter {
             20
         );
 
-        // ==========================================
-        // BOSS
-        // ==========================================
-
         boss = new Boss(
             380,
             400,
             "Cirno (Stage 2 Boss)",
             150
         );
-
-        // ==========================================
-        // ITEMS
-        // ==========================================
 
         powerItem = new Item(
             200,
@@ -96,10 +80,6 @@ public class Main extends ApplicationAdapter {
             1000L
         );
 
-        // ==========================================
-        // POLYMORPHIC LIST
-        // ==========================================
-
         entities.add(player);
         entities.add(fairy);
         entities.add(boss);
@@ -107,43 +87,132 @@ public class Main extends ApplicationAdapter {
         entities.add(pointItem);
     }
 
+    // SOAL 2
+    // Generic Type + Iterator Pattern
+
+    public <T extends GameObject> void updateAndClean(
+        List<T> list,
+        float delta,
+        float screenWidth,
+        float screenHeight
+    ) {
+
+        Iterator<T> iterator =
+            list.iterator();
+
+        while (iterator.hasNext()) {
+
+            T entity =
+                iterator.next();
+
+            entity.update(delta);
+
+            if (
+                entity.isOffScreen(
+                    screenWidth,
+                    screenHeight
+                )
+                    || entity.isDestroyed()
+            ) {
+
+                System.out.println(
+                    "Removed via Generic Iterator: "
+                        + entity.getClass().getSimpleName()
+                );
+
+                iterator.remove();
+            }
+        }
+    }
+
+    // SOAL 3
+
     @Override
     public void render() {
-        float delta = Gdx.graphics.getDeltaTime();
 
-        // TODO 1: Jika tombol Z baru saja ditekan, tambahkan bullet baru hasil player.shootBullet() ke dalam list entities.
-        // Clue: Gdx.input.isKeyJustPressed()
-        if (!(Gdx.input.isKeyJustPressed() = 'Z')) {
-        } else {
-            player.shootBullet();
+        float delta =
+            Gdx.graphics.getDeltaTime();
+
+        // Tekan Z untuk menembakkan bullet.
+
+        if (
+            Gdx.input.isKeyJustPressed(
+                Input.Keys.Z
+            )
+        ) {
+
+            Bullet bullet =
+                player.shootBullet();
+
+            entities.add(bullet);
         }
 
-        // TODO 2: Panggil updateAndClean(entities, delta, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
-        // untuk meng-update sekaligus membersihkan entity yang destroyed/off-screen.
-        updateAndClean(entities, delta, Gdx.graphics.getWidth());
+        // Update dan clean.
 
-        // 3. Collision detection antar entity (skip entity yang sudah destroyed)
-        for (int i = 0; i < entities.size(); i++) {
-            for (int j = i + 1; j < entities.size(); j++) {
-                GameObject a = entities.get(i);
-                GameObject b = entities.get(j);
+        updateAndClean(
+            entities,
+            delta,
+            Gdx.graphics.getWidth(),
+            Gdx.graphics.getHeight()
+        );
 
-                if (!a.isDestroyed() && !b.isDestroyed()) {
-                    if (a.getCoreHitbox().overlaps(b.getCoreHitbox())) {
-                        a.onCollision(b);
-                        b.onCollision(a);
-                    }
+        // Collision detection.
+
+        for (int i = 0;
+             i < entities.size();
+             i++) {
+
+            for (int j = i + 1;
+                 j < entities.size();
+                 j++) {
+
+                GameObject a =
+                    entities.get(i);
+
+                GameObject b =
+                    entities.get(j);
+
+                if (
+                    a.isDestroyed()
+                        || b.isDestroyed()
+                ) {
+                    continue;
+                }
+
+                if (
+                    a.getCoreHitbox()
+                        .overlaps(
+                            b.getCoreHitbox()
+                        )
+                ) {
+
+                    a.onCollision(b);
+                    b.onCollision(a);
                 }
             }
         }
 
-        ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1f);
+        ScreenUtils.clear(
+            0.1f,
+            0.1f,
+            0.15f,
+            1f
+        );
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.begin(
+            ShapeRenderer.ShapeType.Filled
+        );
+
         for (GameObject entity : entities) {
-            // TODO 3: Gunakan if statement untuk mengecek apakah entity belum hancur (!entity.isDestroyed()).
-            // kalo iya, panggil method entity.render(shapeRenderer);
+
+            if (!entity.isDestroyed()) {
+
+                entity.render(
+                    shapeRenderer
+                );
+            }
         }
+
         shapeRenderer.end();
     }
 
@@ -154,26 +223,4 @@ public class Main extends ApplicationAdapter {
             shapeRenderer.dispose();
         }
     }
-
-    public <T extends GameObject> void updateAndClean(List<T> list, float delta, float screenWidth, float screenHeight) {
-        // 1. Dapatkan Iterator<T> dari list yang diberikan.
-
-        // 2. Selama masih ada elemen berikutnya (hasNext()):
-        //    a. Ambil elemen saat ini menggunakan next(), simpan ke variabel bertipe T.
-        //    b. Panggil update(delta) pada elemen tersebut.
-        //    c. Jika elemen tersebut isOffScreen(screenWidth, screenHeight) ATAU isDestroyed():
-        //       - Tampilkan pesan: "Removed via Generic Iterator: " + [nama class entity, pakai getClass().getSimpleName()]
-        //       - Hapus elemen ini dari list menggunakan method milik Iterator (BUKAN list.remove()!).
-        MapLayers objects = null;
-        Iterator<MapLayer> iterator = objects.iterator();
-
-        while (iterator.hasNext()) {
-            T object = iterator.next();
-
-            if (object.destroyed) {
-                iterator.remove();
-            }
-        }
-    }
-
 }

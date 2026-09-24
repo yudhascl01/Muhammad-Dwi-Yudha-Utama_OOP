@@ -8,8 +8,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 
-import static com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType.*;
-
 public class Player extends GameObject {
 
     private String name;
@@ -18,8 +16,20 @@ public class Player extends GameObject {
     private int spellCards;
     private long score;
 
-    public Player(String name, int hp, int power, int spellCards) {
-        super(280, 40, 32, 32, 250f, Color.RED);
+    public Player(
+        String name,
+        int hp,
+        int power,
+        int spellCards
+    ) {
+        super(
+            280,
+            40,
+            32,
+            32,
+            250f,
+            Color.RED
+        );
 
         this.name = name;
         this.hp = Math.max(0, hp);
@@ -28,8 +38,22 @@ public class Player extends GameObject {
         this.score = 0;
     }
 
-    public Player(float x, float y, String name, int hp, int power, int spellCards) {
-        super(x, y, 32, 32, 250f, Color.RED);
+    public Player(
+        float x,
+        float y,
+        String name,
+        int hp,
+        int power,
+        int spellCards
+    ) {
+        super(
+            x,
+            y,
+            32,
+            32,
+            250f,
+            Color.RED
+        );
 
         this.name = name;
         this.hp = Math.max(0, hp);
@@ -37,105 +61,157 @@ public class Player extends GameObject {
         this.spellCards = spellCards;
         this.score = 0;
     }
-
-    // ==========================================
-    // PART I - REAL-TIME PLAYER MOVEMENT
-    // ==========================================
 
     @Override
     public void update(float delta) {
+
         if (Gdx.input != null) {
 
-            // W / UP -> Move Up
-            if (Gdx.input.isKeyPressed(Input.Keys.W)
-                || Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            // ==========================================
+            // MOVEMENT
+            // ==========================================
+
+            if (
+                Gdx.input.isKeyPressed(Input.Keys.W)
+                    || Gdx.input.isKeyPressed(Input.Keys.UP)
+            ) {
                 y += speed * delta;
             }
 
-            // S / DOWN -> Move Down
-            if (Gdx.input.isKeyPressed(Input.Keys.S)
-                || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            if (
+                Gdx.input.isKeyPressed(Input.Keys.S)
+                    || Gdx.input.isKeyPressed(Input.Keys.DOWN)
+            ) {
                 y -= speed * delta;
             }
 
-            // A / LEFT -> Move Left
-            if (Gdx.input.isKeyPressed(Input.Keys.A)
-                || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            if (
+                Gdx.input.isKeyPressed(Input.Keys.A)
+                    || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+            ) {
                 x -= speed * delta;
             }
 
-            // D / RIGHT -> Move Right
-            if (Gdx.input.isKeyPressed(Input.Keys.D)
-                || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            if (
+                Gdx.input.isKeyPressed(Input.Keys.D)
+                    || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+            ) {
                 x += speed * delta;
+            }
+
+            // ==========================================
+            // BATASI PLAYER AGAR TIDAK KELUAR FRAME
+            // ==========================================
+
+            float screenWidth =
+                Gdx.graphics.getWidth();
+
+            float screenHeight =
+                Gdx.graphics.getHeight();
+
+            // Batas kiri
+            if (x < 0) {
+                x = 0;
+            }
+
+            // Batas kanan
+            if (x + width > screenWidth) {
+                x = screenWidth - width;
+            }
+
+            // Batas bawah
+            if (y < 0) {
+                y = 0;
+            }
+
+            // Batas atas
+            if (y + height > screenHeight) {
+                y = screenHeight - height;
             }
         }
     }
 
-    // ==========================================
-    // PART II - COLLISION
-    // ==========================================
-
     @Override
     public void onCollision(Collidable other) {
+
         if (other instanceof Item) {
+
             Item item = (Item) other;
 
-            if (!item.isCollected()) {
-                System.out.println("Player touches items");
+            if (
+                !item.isCollected()
+                    && !item.isDestroyed()
+            ) {
+
+                System.out.println(
+                    "Player touches items"
+                );
+
                 collectItem(item);
             }
         }
     }
 
-    // ==========================================
-    // DAMAGE & COMBAT
-    // ==========================================
-
     public void takeDamage(int damage) {
+
         setHp(getHp() - damage);
 
         if (getHp() > 0) {
+
             System.out.println(
-                getName() + " took " + damage
-                    + " damage! Remaining HP: " + getHp()
+                getName()
+                    + " took "
+                    + damage
+                    + " damage! Remaining HP: "
+                    + getHp()
             );
+
         } else {
+
             System.out.println(
-                getName() + " took " + damage
+                getName()
+                    + " took "
+                    + damage
                     + " damage! Remaining HP: 0"
             );
 
             System.out.println(
-                getName() + " was defeated (Pichuun~)!"
+                getName()
+                    + " was defeated (Pichuun~)!"
             );
         }
     }
 
     public void shoot(Enemy target) {
+
         int damage = 10 + getPower();
 
         System.out.println(
-            getName() + " shoots " + target.getName()
-                + " dealing " + damage + " DMG!"
+            getName()
+                + " shoots "
+                + target.getName()
+                + " dealing "
+                + damage
+                + " DMG!"
         );
 
-        boolean defeated = target.takeDamage(damage);
+        boolean defeated =
+            target.takeDamage(damage);
 
         if (defeated) {
             addScore(target.getScoreValue());
         }
     }
 
-    // ==========================================
-    // PART V - BULLET
-    // ==========================================
-
     public Bullet shootBullet() {
+
         int damage = 10 + power;
 
         System.out.println(
-            name + " shoots bullet dealing " + damage + " DMG!"
+            name
+                + " shoots bullet dealing "
+                + damage
+                + " DMG!"
         );
 
         return new Bullet(
@@ -150,95 +226,117 @@ public class Player extends GameObject {
         return getHp() > 0;
     }
 
-    // ==========================================
-    // SCORE SYSTEM
-    // ==========================================
-
     public void addScore(long points) {
+
         if (points > 0) {
+
             this.score += points;
 
             System.out.println(
-                getName() + " gained " + points
-                    + " pts! Total Score: " + this.score
+                getName()
+                    + " gained "
+                    + points
+                    + " pts! Total Score: "
+                    + this.score
             );
         }
     }
 
-    // ==========================================
-    // PART III - COLLECT ITEM
-    // ==========================================
-
     public void collectItem(Item item) {
 
-        if (item == null || item.isCollected()) {
+        if (
+            item == null
+                || item.isDestroyed()
+        ) {
             return;
         }
 
-        ItemType type = item.getItemTypeEnum();
+        ItemType type =
+            item.getItemTypeEnum();
 
         if (type != null) {
 
             switch (type) {
 
                 case POWER -> {
-                    this.power += type.getPowerBonus();
 
-                    addScore(item.getScoreValue());
+                    this.power +=
+                        type.getPowerBonus();
+
+                    addScore(
+                        item.getScoreValue()
+                    );
 
                     System.out.println(
-                        name + " collected POWER item! "
-                            + "Power increased to " + power
+                        name
+                            + " collected POWER item! "
+                            + "Power increased to "
+                            + power
                     );
                 }
 
                 case POINT -> {
-                    addScore(item.getScoreValue());
+
+                    addScore(
+                        item.getScoreValue()
+                    );
 
                     System.out.println(
-                        name + " collected POINT item!"
+                        name
+                            + " collected POINT item!"
                     );
                 }
 
                 case BOMB -> {
+
                     this.spellCards += 1;
 
-                    addScore(item.getScoreValue());
+                    addScore(
+                        item.getScoreValue()
+                    );
 
                     System.out.println(
-                        name + " collected BOMB item! "
-                            + "SpellCards: " + spellCards
+                        name
+                            + " collected BOMB item! "
+                            + "SpellCards: "
+                            + spellCards
                     );
                 }
 
                 case LIFE -> {
+
                     this.hp += 20;
 
-                    addScore(item.getScoreValue());
+                    addScore(
+                        item.getScoreValue()
+                    );
 
                     System.out.println(
-                        name + " collected LIFE item! "
-                            + "HP: " + hp
+                        name
+                            + " collected LIFE item! "
+                            + "HP: "
+                            + hp
                     );
                 }
             }
 
         } else {
 
-            addScore(item.getScoreValue());
+            addScore(
+                item.getScoreValue()
+            );
 
             System.out.println(
-                name + " collected " + item.getItemType() + "!"
+                name
+                    + " collected "
+                    + item.getItemType()
+                    + "!"
             );
         }
 
-        // Mark item as collected.
         item.setCollected(true);
+        item.destroy();
     }
-
-    // ==========================================
-    // GETTER & SETTER
-    // ==========================================
 
     public String getName() {
         return name;
@@ -275,31 +373,4 @@ public class Player extends GameObject {
     public long getScore() {
         return score;
     }
-
-    void collectItem(Item item) {
-        if (item.isDestroyed()) return; // Mencegah item diambil dua kali di frame yang sama
-        // ... switch-case type item yang sudah kalian buat sebelumnya ...
-        switch (item) {
-            case POWER:
-                POWER.isDestroyed();
-                break;
-
-            case POINT:
-                POINT.isDestroyed();
-                break;
-
-            case BOMB:
-                BOMB.isDestroyed();
-                break;
-
-            case LIFE:
-                LIFE.isDestroyed();
-                break;
-
-        }
-        // TODO: Tandai item ini sebagai destroyed agar nanti dihapus oleh Iterator
-        // Panggil method destroy() milik item di sini!
-        item.isDestroyed();
-    }
-
 }

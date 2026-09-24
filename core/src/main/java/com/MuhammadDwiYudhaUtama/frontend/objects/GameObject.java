@@ -3,13 +3,9 @@ package com.MuhammadDwiYudhaUtama.frontend.objects;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.Input;
-import java.util.Iterator;
-
 
 public abstract class GameObject implements Collidable {
 
-    public boolean destroyed;
     protected float x;
     protected float y;
     protected float width;
@@ -19,8 +15,14 @@ public abstract class GameObject implements Collidable {
 
     protected boolean active = true;
 
-    public GameObject(float x, float y, float width, float height,
-                      float speed, Color color) {
+    public GameObject(
+        float x,
+        float y,
+        float width,
+        float height,
+        float speed,
+        Color color
+    ) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -30,13 +32,26 @@ public abstract class GameObject implements Collidable {
     }
 
     public void update(float delta) {
-        // Default: object tidak memiliki pergerakan.
     }
 
-    public void render(ShapeRenderer shapeRenderer) {
-        if (shapeRenderer != null && color != null && active) {
+    public void render(
+        ShapeRenderer shapeRenderer
+    ) {
+
+        if (
+            shapeRenderer != null
+                && color != null
+                && active
+        ) {
+
             shapeRenderer.setColor(color);
-            shapeRenderer.rect(x, y, width, height);
+
+            shapeRenderer.rect(
+                x,
+                y,
+                width,
+                height
+            );
         }
     }
 
@@ -48,14 +63,16 @@ public abstract class GameObject implements Collidable {
         active = false;
     }
 
-    public boolean isOffScreen(float screenWidth, float screenHeight) {
+    public boolean isOffScreen(
+        float screenWidth,
+        float screenHeight
+    ) {
+
         return x < -50
             || x > screenWidth + 50
             || y < -50
             || y > screenHeight + 50;
     }
-
-    // Getter dan Setter
 
     public float getX() {
         return x;
@@ -111,15 +128,20 @@ public abstract class GameObject implements Collidable {
         this.color = color;
     }
 
-    // Collidable
-
     @Override
     public Rectangle getCoreHitbox() {
-        return new Rectangle(x, y, width, height);
+
+        return new Rectangle(
+            x,
+            y,
+            width,
+            height
+        );
     }
 
     @Override
     public Rectangle getGrazeHitbox() {
+
         return new Rectangle(
             x - 10,
             y - 10,
@@ -129,7 +151,8 @@ public abstract class GameObject implements Collidable {
     }
 
     @Override
-    public void onCollision(Collidable other) {
-        // Default: tidak ada aksi ketika collision terjadi.
+    public void onCollision(
+        Collidable other
+    ) {
     }
 }

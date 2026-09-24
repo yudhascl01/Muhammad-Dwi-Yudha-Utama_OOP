@@ -10,7 +10,11 @@ public enum ItemType {
     private final long scoreValue;
     private final int powerBonus;
 
-    ItemType(long scoreValue, int powerBonus) {
+    ItemType(
+        long scoreValue,
+        int powerBonus
+    ) {
+
         this.scoreValue = scoreValue;
         this.powerBonus = powerBonus;
     }

@@ -8,7 +8,11 @@ public class Fairy extends Enemy {
 
     private float collisionCooldown;
 
-    public Fairy(String name, int hp) {
+    public Fairy(
+        String name,
+        int hp
+    ) {
+
         super(
             150,
             380,
@@ -23,7 +27,13 @@ public class Fairy extends Enemy {
         this.collisionCooldown = 0f;
     }
 
-    public Fairy(float x, float y, String name, int hp) {
+    public Fairy(
+        float x,
+        float y,
+        String name,
+        int hp
+    ) {
+
         super(
             x,
             y,
@@ -38,13 +48,11 @@ public class Fairy extends Enemy {
         this.collisionCooldown = 0f;
     }
 
-    // ==========================================
-    // BONUS - COLLISION COOLDOWN
-    // ==========================================
-
     @Override
     public void update(float delta) {
+
         if (collisionCooldown > 0f) {
+
             collisionCooldown -= delta;
 
             if (collisionCooldown < 0f) {
@@ -53,12 +61,10 @@ public class Fairy extends Enemy {
         }
     }
 
-    // ==========================================
-    // SOAL 3 - COLLISION
-    // ==========================================
-
     @Override
-    public void onCollision(Collidable other) {
+    public void onCollision(
+        Collidable other
+    ) {
 
         if (other instanceof Player) {
 
