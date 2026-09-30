@@ -22,13 +22,4 @@ public interface ScoreRepository extends JpaRepository<Score, UUID> {
         nativeQuery = true
     )
     List<Score> findTopScores(@Param("limit") Integer limit);
-
-    List<Score> findTopScores();
-
-    List<Score> findTopScores();
-
-    List<Score> findTopScores();
-
-    List<Score> findTopScores();
-
 }

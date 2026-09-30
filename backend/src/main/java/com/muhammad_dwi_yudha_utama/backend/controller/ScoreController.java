@@ -4,14 +4,9 @@ import com.muhammad_dwi_yudha_utama.backend.model.Score;
 import com.muhammad_dwi_yudha_utama.backend.service.ScoreService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,6 +52,58 @@ public class ScoreController {
                     e.getMessage() != null
                         ? e.getMessage()
                         : "Failed to create score"
+                ));
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Score>> getAllScores() {
+        List<Score> scores = scoreService.getAllScores();
+
+        return ResponseEntity.ok(scores);
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<Score>> getLeaderboardByPoint(
+        @RequestParam(defaultValue = "10") Integer limit) {
+
+        List<Score> scores = scoreService.getLeaderboard(limit);
+
+        return ResponseEntity.ok(scores);
+    }
+
+    @GetMapping("/above/{minValue}")
+    public ResponseEntity<List<Score>> getScoresAboveValue(
+        @PathVariable Integer minValue) {
+
+        List<Score> scores = scoreService.getScoreAboveValue(minValue);
+
+        return ResponseEntity.ok(scores);
+    }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<Score>> getRecentScores() {
+        List<Score> scores = scoreService.getRecentScores();
+
+        return ResponseEntity.ok(scores);
+    }
+
+    @DeleteMapping("/{scoreId}")
+    public ResponseEntity<?> deleteScore(@PathVariable UUID scoreId) {
+        try {
+            scoreService.deleteScore(scoreId);
+
+            return ResponseEntity.ok(
+                Map.of("message", "Score berhasil dihapus")
+            );
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                    "error",
+                    e.getMessage() != null
+                        ? e.getMessage()
+                        : "Score tidak ditemukan"
                 ));
         }
     }

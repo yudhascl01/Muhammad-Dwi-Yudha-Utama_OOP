@@ -25,34 +25,28 @@ public class ScoreService {
         return scoreRepository.findById(scoreId);
     }
 
-    public List<Score> getAllScores(){
-        // TODO: Gunakan scoreRepository untuk menemukan semua score yang ada di database kemudian kembalikan hasilnya
-        // hint: Panggil method yang sama seperti kode yang kalian buat di TP nomor 4
+    public List<Score> getAllScores() {
         return scoreRepository.findAll();
     }
 
-    public List<Score> getRecentScores(){
-        // TODO: Gunakan scoreRepository untuk menemukan semua score yang ada di database dengan urutan pembuatan terbaru kemudian kembalikan hasilnya
+    public List<Score> getRecentScores() {
         return scoreRepository.findAllByOrderByCreatedAtDesc();
     }
 
-    public List<Score> getScoreAboveValue(Integer minValue){
-        // TODO: Gunakan scoreRepository untuk menemukan semua score yang ada di database yang memiliki point di atas nilai tertentu
-        // gunakan minValue sebagai batas bawah nilai point
+    public List<Score> getScoreAboveValue(Integer minValue) {
         return scoreRepository.findPointGreaterThan(minValue);
     }
 
     public List<Score> getLeaderboard(Integer limit) {
-        // TODO: Gunakan scoreRepository untuk mencari Top Scores dan berikan parameter yang sesuai
         return scoreRepository.findTopScores(limit);
     }
 
     public void deleteScore(UUID scoreId) {
-        // TODO:
-        // 1. Cari score yang ingin dihapus menggunakan scoreRepository kemudian simpan score tersebut (hint: lihat caranya di getScoreById())
-        // 2. Cek apakah score tersebut ditemukan atau tidak dengan `.orElseThrow(()-> new RuntimeException("Score dengan ID " + scoreId + " tidak ditemukan"));`
-        // 3. Panggil delete() dari scoreRepository untuk menghapus score yang disimpan tadi
+        Score score = scoreRepository.findById(scoreId)
+            .orElseThrow(() -> new RuntimeException(
+                "Score dengan ID " + scoreId + " tidak ditemukan"
+            ));
+
+        scoreRepository.delete(score);
     }
-
-
 }
