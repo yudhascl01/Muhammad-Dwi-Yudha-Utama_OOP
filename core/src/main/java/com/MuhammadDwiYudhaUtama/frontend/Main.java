@@ -7,10 +7,12 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Boss;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
+import com.MuhammadDwiYudhaUtama.frontend.systems.AssetManager;
+import com.MuhammadDwiYudhaUtama.frontend.systems.EntityFactory;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ import java.util.List;
 
 public class Main extends ApplicationAdapter {
 
-    private ShapeRenderer shapeRenderer;
+    private SpriteBatch batch;
 
     private Player player;
     private Fairy fairy;
@@ -33,11 +35,13 @@ public class Main extends ApplicationAdapter {
     @Override
     public void create() {
 
-        shapeRenderer = new ShapeRenderer();
+        batch = new SpriteBatch();
+
+        AssetManager.getInstance().init();
 
         entities = new ArrayList<>();
 
-        player = new Player(
+        player = EntityFactory.createPlayer(
             280,
             40,
             "Reimu Hakurei",
@@ -53,6 +57,11 @@ public class Main extends ApplicationAdapter {
             20
         );
 
+        fairy.setAnimation(
+            AssetManager.getInstance()
+                .getAnimation("fairy_idle")
+        );
+
         boss = new Boss(
             380,
             400,
@@ -60,24 +69,21 @@ public class Main extends ApplicationAdapter {
             150
         );
 
-        powerItem = new Item(
-            200,
-            450,
-            16,
-            16,
-            80f,
-            ItemType.POWER,
-            500L
+        boss.setAnimation(
+            AssetManager.getInstance()
+                .getAnimation("boss_idle")
         );
 
-        pointItem = new Item(
+        powerItem = EntityFactory.createItem(
+            200,
+            450,
+            ItemType.POWER
+        );
+
+        pointItem = EntityFactory.createItem(
             320,
             480,
-            12,
-            12,
-            120f,
-            ItemType.POINT,
-            1000L
+            ItemType.POINT
         );
 
         entities.add(player);
@@ -86,9 +92,6 @@ public class Main extends ApplicationAdapter {
         entities.add(powerItem);
         entities.add(pointItem);
     }
-
-    // SOAL 2
-    // Generic Type + Iterator Pattern
 
     public <T extends GameObject> void updateAndClean(
         List<T> list,
@@ -125,15 +128,11 @@ public class Main extends ApplicationAdapter {
         }
     }
 
-    // SOAL 3
-
     @Override
     public void render() {
 
         float delta =
             Gdx.graphics.getDeltaTime();
-
-        // Tekan Z untuk menembakkan bullet.
 
         if (
             Gdx.input.isKeyJustPressed(
@@ -147,16 +146,12 @@ public class Main extends ApplicationAdapter {
             entities.add(bullet);
         }
 
-        // Update dan clean.
-
         updateAndClean(
             entities,
             delta,
             Gdx.graphics.getWidth(),
             Gdx.graphics.getHeight()
         );
-
-        // Collision detection.
 
         for (int i = 0;
              i < entities.size();
@@ -199,28 +194,25 @@ public class Main extends ApplicationAdapter {
             1f
         );
 
-        shapeRenderer.begin(
-            ShapeRenderer.ShapeType.Filled
-        );
+        batch.begin();
 
         for (GameObject entity : entities) {
 
             if (!entity.isDestroyed()) {
-
-                entity.render(
-                    shapeRenderer
-                );
+                entity.render(batch);
             }
         }
 
-        shapeRenderer.end();
+        batch.end();
     }
 
     @Override
     public void dispose() {
 
-        if (shapeRenderer != null) {
-            shapeRenderer.dispose();
+        if (batch != null) {
+            batch.dispose();
         }
+
+        AssetManager.getInstance().dispose();
     }
 }

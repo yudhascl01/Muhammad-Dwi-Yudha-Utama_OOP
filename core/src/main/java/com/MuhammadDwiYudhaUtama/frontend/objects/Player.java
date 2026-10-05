@@ -1,12 +1,15 @@
 package com.MuhammadDwiYudhaUtama.frontend.objects;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.bullets.Bullet;
+import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Boss;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Enemy;
+import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
-import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
+import com.MuhammadDwiYudhaUtama.frontend.systems.AssetManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Player extends GameObject {
 
@@ -14,29 +17,7 @@ public class Player extends GameObject {
     private int hp;
     private int power;
     private int spellCards;
-    private long score;
-
-    public Player(
-        String name,
-        int hp,
-        int power,
-        int spellCards
-    ) {
-        super(
-            280,
-            40,
-            32,
-            32,
-            250f,
-            Color.RED
-        );
-
-        this.name = name;
-        this.hp = Math.max(0, hp);
-        this.power = power;
-        this.spellCards = spellCards;
-        this.score = 0;
-    }
+    private int score;
 
     public Player(
         float x,
@@ -56,152 +37,110 @@ public class Player extends GameObject {
         );
 
         this.name = name;
-        this.hp = Math.max(0, hp);
+        this.hp = hp;
         this.power = power;
         this.spellCards = spellCards;
         this.score = 0;
     }
 
+    public Player(
+        String name,
+        int hp,
+        int power,
+        int spellCards
+    ) {
+        this(
+            0,
+            0,
+            name,
+            hp,
+            power,
+            spellCards
+        );
+    }
+
     @Override
     public void update(float delta) {
 
-        if (Gdx.input != null) {
+        super.update(delta);
 
-            // ==========================================
-            // MOVEMENT
-            // ==========================================
+        float dx = 0;
+        float dy = 0;
 
-            if (
-                Gdx.input.isKeyPressed(Input.Keys.W)
-                    || Gdx.input.isKeyPressed(Input.Keys.UP)
-            ) {
-                y += speed * delta;
-            }
+        if (
+            Gdx.input.isKeyPressed(Input.Keys.W)
+                || Gdx.input.isKeyPressed(Input.Keys.UP)
+        ) {
+            dy += speed * delta;
+        }
 
-            if (
-                Gdx.input.isKeyPressed(Input.Keys.S)
-                    || Gdx.input.isKeyPressed(Input.Keys.DOWN)
-            ) {
-                y -= speed * delta;
-            }
+        if (
+            Gdx.input.isKeyPressed(Input.Keys.S)
+                || Gdx.input.isKeyPressed(Input.Keys.DOWN)
+        ) {
+            dy -= speed * delta;
+        }
 
-            if (
-                Gdx.input.isKeyPressed(Input.Keys.A)
-                    || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-            ) {
-                x -= speed * delta;
-            }
+        if (
+            Gdx.input.isKeyPressed(Input.Keys.A)
+                || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+        ) {
+            dx -= speed * delta;
+        }
 
-            if (
-                Gdx.input.isKeyPressed(Input.Keys.D)
-                    || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-            ) {
-                x += speed * delta;
-            }
+        if (
+            Gdx.input.isKeyPressed(Input.Keys.D)
+                || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+        ) {
+            dx += speed * delta;
+        }
 
-            // ==========================================
-            // BATASI PLAYER AGAR TIDAK KELUAR FRAME
-            // ==========================================
+        x += dx;
+        y += dy;
 
-            float screenWidth =
-                Gdx.graphics.getWidth();
+        if (x < 0) {
+            x = 0;
+        }
 
-            float screenHeight =
-                Gdx.graphics.getHeight();
+        if (x + width > Gdx.graphics.getWidth()) {
+            x = Gdx.graphics.getWidth() - width;
+        }
 
-            // Batas kiri
-            if (x < 0) {
-                x = 0;
-            }
+        if (y < 0) {
+            y = 0;
+        }
 
-            // Batas kanan
-            if (x + width > screenWidth) {
-                x = screenWidth - width;
-            }
-
-            // Batas bawah
-            if (y < 0) {
-                y = 0;
-            }
-
-            // Batas atas
-            if (y + height > screenHeight) {
-                y = screenHeight - height;
-            }
+        if (y + height > Gdx.graphics.getHeight()) {
+            y = Gdx.graphics.getHeight() - height;
         }
     }
 
-    @Override
-    public void onCollision(Collidable other) {
-
-        if (other instanceof Item) {
-
-            Item item = (Item) other;
-
-            if (
-                !item.isCollected()
-                    && !item.isDestroyed()
-            ) {
-
-                System.out.println(
-                    "Player touches items"
-                );
-
-                collectItem(item);
-            }
-        }
-    }
-
-    public void takeDamage(int damage) {
-
-        setHp(getHp() - damage);
-
-        if (getHp() > 0) {
-
-            System.out.println(
-                getName()
-                    + " took "
-                    + damage
-                    + " damage! Remaining HP: "
-                    + getHp()
-            );
-
+    public void updateAnimationState(float dx) {
+        AssetManager assets = AssetManager.getInstance();
+        if (dx < 0) {
+            // TODO:
+            // 1. Lanjutkan perubahan hanya jika currentDir bukan -1.
+            // 2. Ubah currentDir menjadi -1.
+            // 3. Ambil animasi "player_left" melalui assets.getAnimation(...).
+            //    Simpan pada variabel lokal bertipe Animation<TextureRegion> bernama anim.
+            // 4. Jika anim tidak null, pasang anim melalui setAnimation(...).
+        } else if (dx > 0) {
+            // TODO:
+            // 1. Lanjutkan perubahan hanya jika currentDir bukan 1.
+            // 2. Ubah currentDir menjadi 1.
+            // 3. Ambil animasi "player_right" melalui assets.getAnimation(...).
+            //    Simpan pada variabel lokal bertipe Animation<TextureRegion> bernama anim.
+            // 4. Jika anim tidak null, pasang anim melalui setAnimation(...).
         } else {
-
-            System.out.println(
-                getName()
-                    + " took "
-                    + damage
-                    + " damage! Remaining HP: 0"
-            );
-
-            System.out.println(
-                getName()
-                    + " was defeated (Pichuun~)!"
-            );
+            // TODO:
+            // 1. Lanjutkan perubahan hanya jika currentDir bukan 0.
+            // 2. Ubah currentDir menjadi 0.
+            // 3. Ambil animasi "player_idle" melalui assets.getAnimation(...).
+            //    Simpan pada variabel lokal bertipe Animation<TextureRegion> bernama anim.
+            // 4. Jika anim tidak null, pasang anim melalui setAnimation(...).
         }
     }
 
-    public void shoot(Enemy target) {
-
-        int damage = 10 + getPower();
-
-        System.out.println(
-            getName()
-                + " shoots "
-                + target.getName()
-                + " dealing "
-                + damage
-                + " DMG!"
-        );
-
-        boolean defeated =
-            target.takeDamage(damage);
-
-        if (defeated) {
-            addScore(target.getScoreValue());
-        }
-    }
 
     public Bullet shootBullet() {
 
@@ -214,128 +153,140 @@ public class Player extends GameObject {
                 + " DMG!"
         );
 
-        return new Bullet(
-            x + width / 2 - 4,
-            y + height,
-            BulletType.AMULET,
-            damage
-        );
-    }
-
-    public boolean isAlive() {
-        return getHp() > 0;
-    }
-
-    public void addScore(long points) {
-
-        if (points > 0) {
-
-            this.score += points;
-
-            System.out.println(
-                getName()
-                    + " gained "
-                    + points
-                    + " pts! Total Score: "
-                    + this.score
+        Bullet bullet =
+            new Bullet(
+                x + width / 2 - 4,
+                y + height,
+                BulletType.AMULET,
+                damage
             );
+
+        TextureRegion sprite =
+            AssetManager.getInstance()
+                .getTextureRegion("bullet_amulet");
+
+        bullet.setSprite(sprite);
+
+        return bullet;
+    }
+
+    public void shoot(Enemy enemy) {
+
+        if (enemy == null || enemy.isDestroyed()) {
+            return;
         }
+
+        int damage = 10 + power;
+
+        System.out.println(
+            name
+                + " shoots "
+                + enemy.getName()
+                + " for "
+                + damage
+                + " DMG!"
+        );
+
+        enemy.takeDamage(damage);
+    }
+
+    public void shoot(Fairy fairy) {
+
+        shoot((Enemy) fairy);
+    }
+
+    public void shoot(Boss boss) {
+
+        shoot((Enemy) boss);
     }
 
     public void collectItem(Item item) {
 
-        if (
-            item == null
-                || item.isDestroyed()
-        ) {
+        if (item.isDestroyed()) {
             return;
         }
 
-        ItemType type =
-            item.getItemTypeEnum();
+        String type = item.getItemType();
 
-        if (type != null) {
+        switch (type) {
 
-            switch (type) {
+            case "POWER":
+                power++;
 
-                case POWER -> {
+                System.out.println(
+                    name
+                        + " collected POWER item! Power increased to "
+                        + power
+                );
+                break;
 
-                    this.power +=
-                        type.getPowerBonus();
+            case "POINT":
+                score += 100;
 
-                    addScore(
-                        item.getScoreValue()
-                    );
+                System.out.println(
+                    name
+                        + " collected POINT item! Score increased to "
+                        + score
+                );
+                break;
 
-                    System.out.println(
-                        name
-                            + " collected POWER item! "
-                            + "Power increased to "
-                            + power
-                    );
-                }
+            case "BOMB":
+                spellCards++;
 
-                case POINT -> {
+                System.out.println(
+                    name
+                        + " collected BOMB item! Spell Cards increased to "
+                        + spellCards
+                );
+                break;
 
-                    addScore(
-                        item.getScoreValue()
-                    );
+            case "LIFE":
+                hp++;
 
-                    System.out.println(
-                        name
-                            + " collected POINT item!"
-                    );
-                }
+                System.out.println(
+                    name
+                        + " collected LIFE item! HP increased to "
+                        + hp
+                );
+                break;
+        }
 
-                case BOMB -> {
+        item.destroy();
+    }
 
-                    this.spellCards += 1;
+    public void takeDamage(int damage) {
 
-                    addScore(
-                        item.getScoreValue()
-                    );
+        hp -= damage;
 
-                    System.out.println(
-                        name
-                            + " collected BOMB item! "
-                            + "SpellCards: "
-                            + spellCards
-                    );
-                }
+        if (hp < 0) {
+            hp = 0;
+        }
 
-                case LIFE -> {
+        System.out.println(
+            name
+                + " took "
+                + damage
+                + " damage! HP: "
+                + hp
+        );
 
-                    this.hp += 20;
+        if (hp <= 0) {
 
-                    addScore(
-                        item.getScoreValue()
-                    );
-
-                    System.out.println(
-                        name
-                            + " collected LIFE item! "
-                            + "HP: "
-                            + hp
-                    );
-                }
-            }
-
-        } else {
-
-            addScore(
-                item.getScoreValue()
-            );
+            destroy();
 
             System.out.println(
                 name
-                    + " collected "
-                    + item.getItemType()
-                    + "!"
+                    + " was defeated!"
             );
         }
+    }
 
-        item.setCollected(true);
-        item.destroy();
+    @Override
+    public void onCollision(Collidable other) {
+
+        if (other instanceof Item item) {
+            collectItem(item);
+        }
     }
 
     public String getName() {
@@ -359,7 +310,7 @@ public class Player extends GameObject {
     }
 
     public void setPower(int power) {
-        this.power = power;
+        this.power = Math.max(0, power);
     }
 
     public int getSpellCards() {
@@ -367,10 +318,14 @@ public class Player extends GameObject {
     }
 
     public void setSpellCards(int spellCards) {
-        this.spellCards = spellCards;
+        this.spellCards = Math.max(0, spellCards);
     }
 
-    public long getScore() {
+    public int getScore() {
         return score;
+    }
+
+    public void setScore(int score) {
+        this.score = Math.max(0, score);
     }
 }
