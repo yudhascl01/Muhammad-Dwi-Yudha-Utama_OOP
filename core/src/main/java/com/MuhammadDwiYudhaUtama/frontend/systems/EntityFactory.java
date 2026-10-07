@@ -20,16 +20,89 @@ public class EntityFactory {
         int power,
         int spellCards
     ) {
-        Player player =
-            new Player(x, y, name, hp, power, spellCards);
+        Player player = new Player(
+            x,
+            y,
+            name,
+            hp,
+            power,
+            spellCards
+        );
 
-        Animation<TextureRegion> animation =
+        Animation<TextureRegion> idleAnim =
             AssetManager.getInstance()
                 .getAnimation("player_idle");
 
-        player.setAnimation(animation);
+        player.setAnimation(idleAnim);
 
         return player;
+    }
+
+    public static Boss createBoss(
+        float x,
+        float y,
+        String name,
+        int hp
+    ) {
+        Boss boss = new Boss(
+            x,
+            y,
+            name,
+            hp
+        );
+
+        Animation<TextureRegion> idleAnim =
+            AssetManager.getInstance()
+                .getAnimation("boss_idle");
+
+        boss.setAnimation(idleAnim);
+
+        return boss;
+    }
+
+    public static Fairy createFairy(
+        float x,
+        float y,
+        String name,
+        int hp
+    ) {
+        Fairy fairy = new Fairy(
+            x,
+            y,
+            name,
+            hp
+        );
+
+        Animation<TextureRegion> idleAnim =
+            AssetManager.getInstance()
+                .getAnimation("fairy_idle_red");
+
+        fairy.setAnimation(idleAnim);
+
+        return fairy;
+    }
+
+    public static Fairy createFairy(
+        float x,
+        float y,
+        String name,
+        int hp,
+        String keyString
+    ) {
+        Fairy fairy = new Fairy(
+            x,
+            y,
+            name,
+            hp
+        );
+
+        Animation<TextureRegion> idleAnim =
+            AssetManager.getInstance()
+                .getAnimation(keyString);
+
+        fairy.setAnimation(idleAnim);
+
+        return fairy;
     }
 
     public static Item createItem(
@@ -37,21 +110,43 @@ public class EntityFactory {
         float y,
         ItemType itemType
     ) {
-        Item item =
-            new Item(x, y, itemType);
+        Item item = new Item(
+            x,
+            y,
+            itemType
+        );
 
-        String key = switch (itemType) {
-            case POWER -> "item_power";
-            case POINT -> "item_point";
-            case BOMB -> "item_bomb";
-            case LIFE -> "item_life";
-        };
+        String key;
 
-        TextureRegion sprite =
-            AssetManager.getInstance()
-                .getTextureRegion(key);
+        switch (itemType) {
+            case POWER:
+                key = "item_power";
+                break;
 
-        item.setSprite(sprite);
+            case POINT:
+                key = "item_point";
+                break;
+
+            case BOMB:
+                key = "item_bomb";
+                break;
+
+            case LIFE:
+                key = "item_life";
+                break;
+
+            default:
+                key = null;
+                break;
+        }
+
+        if (key != null) {
+            TextureRegion sprite =
+                AssetManager.getInstance()
+                    .getTextureRegion(key);
+
+            item.setSprite(sprite);
+        }
 
         return item;
     }
@@ -61,14 +156,12 @@ public class EntityFactory {
         float y,
         int damage
     ) {
-        Bullet bullet =
-            new Bullet(
-                x,
-                y,
-                0f,
-                BulletType.DANMAKU,
-                damage
-            );
+        Bullet bullet = new Bullet(
+            x,
+            y,
+            BulletType.DANMAKU,
+            damage
+        );
 
         TextureRegion sprite =
             AssetManager.getInstance()
@@ -79,34 +172,38 @@ public class EntityFactory {
         return bullet;
     }
 
-    public static Boss createBoss(float x, float y, String name, int hp) {
-        // TODO:
-        // 1. Buat Boss baru dengan x, y, name, dan hp dari parameter;
-        //    simpan pada variabel lokal bernama `boss`.
-        Boss boss = new Boss (x, y, name, hp);
-        // 2. Ambil animasi "boss_idle" melalui getAnimation(...)
-        Animation<TextureRegion>idleAnim = AssetManager.getInstance().getAnimation("Boss_Idle");
-        //    dari AssetManager.getInstance(). Simpan hasilnya pada
-        //    variabel lokal bernama `idleAnim`.
-        // 3. Pasang idleAnim pada boss melalui boss.setAnimation(...).
-        boss.setAnimation(idleAnim);
-        // 4. Kembalikan boss.
-        return boss;
+    public static Bullet createPlayerBullet(
+        float x,
+        float y,
+        int damage,
+        String spriteKey
+    ) {
+        TextureRegion sprite =
+            AssetManager.getInstance()
+                .getTextureRegion(spriteKey);
+
+        Bullet bullet = new Bullet(
+            x,
+            y,
+            BulletType.AMULET,
+            damage
+        );
+
+        bullet.setSprite(sprite);
+
+        return bullet;
     }
 
-    public static Fairy createFairy(float x, float y, String name, int hp) {
-        // TODO:
-        // 1. Buat Fairy baru dengan x, y, name, dan hp dari parameter;
-        //    simpan pada variabel lokal bernama `fairy`.
-        Fairy fairy = new Fairy (x, y, name, hp);
-        // 2. Ambil animasi "fairy_idle_red" melalui getAnimation(...)
-        //    dari AssetManager.getInstance(). Simpan hasilnya pada
-        //    variabel lokal bernama `idleAnim`.
-        Animation<TextureRegion>idleAnim = AssetManager.getInstance().getAnimation("fairy_idle_red");
-        // 3. Pasang idleAnim pada fairy melalui fairy.setAnimation(...).
-        fairy.setAnimation(idleAnim);
-        // 4. Kembalikan fairy.
-        return fairy;
+    public static Bullet createPlayerBullet(
+        float x,
+        float y,
+        int damage
+    ) {
+        return createPlayerBullet(
+            x,
+            y,
+            damage,
+            "bullet_amulet"
+        );
     }
-
 }

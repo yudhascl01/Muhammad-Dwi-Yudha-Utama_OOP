@@ -6,9 +6,11 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Enemy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.systems.AssetManager;
+import com.MuhammadDwiYudhaUtama.frontend.systems.EntityFactory;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Player extends GameObject {
@@ -18,6 +20,7 @@ public class Player extends GameObject {
     private int power;
     private int spellCards;
     private int score;
+    private int currentDir = 0;
 
     public Player(
         float x,
@@ -31,7 +34,7 @@ public class Player extends GameObject {
             x,
             y,
             32,
-            32,
+            48,
             250f,
             Color.RED
         );
@@ -61,86 +64,108 @@ public class Player extends GameObject {
 
     @Override
     public void update(float delta) {
-
         super.update(delta);
 
         float dx = 0;
-        float dy = 0;
 
-        if (
-            Gdx.input.isKeyPressed(Input.Keys.W)
-                || Gdx.input.isKeyPressed(Input.Keys.UP)
-        ) {
-            dy += speed * delta;
+        if (Gdx.input != null) {
+
+            if (Gdx.input.isKeyPressed(Input.Keys.W)
+                || Gdx.input.isKeyPressed(Input.Keys.UP)) {
+                y += speed * delta;
+            }
+
+            if (Gdx.input.isKeyPressed(Input.Keys.S)
+                || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+                y -= speed * delta;
+            }
+
+            if (Gdx.input.isKeyPressed(Input.Keys.A)
+                || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+                x -= speed * delta;
+                dx = -1;
+            }
+
+            if (Gdx.input.isKeyPressed(Input.Keys.D)
+                || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+                x += speed * delta;
+                dx = 1;
+            }
         }
-
-        if (
-            Gdx.input.isKeyPressed(Input.Keys.S)
-                || Gdx.input.isKeyPressed(Input.Keys.DOWN)
-        ) {
-            dy -= speed * delta;
-        }
-
-        if (
-            Gdx.input.isKeyPressed(Input.Keys.A)
-                || Gdx.input.isKeyPressed(Input.Keys.LEFT)
-        ) {
-            dx -= speed * delta;
-        }
-
-        if (
-            Gdx.input.isKeyPressed(Input.Keys.D)
-                || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-        ) {
-            dx += speed * delta;
-        }
-
-        x += dx;
-        y += dy;
 
         if (x < 0) {
             x = 0;
-        }
-
-        if (x + width > Gdx.graphics.getWidth()) {
-            x = Gdx.graphics.getWidth() - width;
         }
 
         if (y < 0) {
             y = 0;
         }
 
-        if (y + height > Gdx.graphics.getHeight()) {
-            y = Gdx.graphics.getHeight() - height;
+        if (x + width > 480) {
+            x = 480 - width;
         }
+
+        if (y + height > 480) {
+            y = 480 - height;
+        }
+
+        updateAnimationState(dx);
     }
 
     public void updateAnimationState(float dx) {
-        AssetManager assets = AssetManager.getInstance();
+
+        AssetManager assets =
+            AssetManager.getInstance();
+
         if (dx < 0) {
-            // TODO:
-            // 1. Lanjutkan perubahan hanya jika currentDir bukan -1.
-            // 2. Ubah currentDir menjadi -1.
-            // 3. Ambil animasi "player_left" melalui assets.getAnimation(...).
-            //    Simpan pada variabel lokal bertipe Animation<TextureRegion> bernama anim.
-            // 4. Jika anim tidak null, pasang anim melalui setAnimation(...).
+
+            if (currentDir != -1) {
+
+                currentDir = -1;
+
+                Animation<TextureRegion> anim =
+                    assets.getAnimation(
+                        "player_left"
+                    );
+
+                if (anim != null) {
+                    setAnimation(anim);
+                }
+            }
+
         } else if (dx > 0) {
-            // TODO:
-            // 1. Lanjutkan perubahan hanya jika currentDir bukan 1.
-            // 2. Ubah currentDir menjadi 1.
-            // 3. Ambil animasi "player_right" melalui assets.getAnimation(...).
-            //    Simpan pada variabel lokal bertipe Animation<TextureRegion> bernama anim.
-            // 4. Jika anim tidak null, pasang anim melalui setAnimation(...).
+
+            if (currentDir != 1) {
+
+                currentDir = 1;
+
+                Animation<TextureRegion> anim =
+                    assets.getAnimation(
+                        "player_right"
+                    );
+
+                if (anim != null) {
+                    setAnimation(anim);
+                }
+            }
+
         } else {
-            // TODO:
-            // 1. Lanjutkan perubahan hanya jika currentDir bukan 0.
-            // 2. Ubah currentDir menjadi 0.
-            // 3. Ambil animasi "player_idle" melalui assets.getAnimation(...).
-            //    Simpan pada variabel lokal bertipe Animation<TextureRegion> bernama anim.
-            // 4. Jika anim tidak null, pasang anim melalui setAnimation(...).
+
+            if (currentDir != 0) {
+
+                currentDir = 0;
+
+                Animation<TextureRegion> anim =
+                    assets.getAnimation(
+                        "player_idle"
+                    );
+
+                if (anim != null) {
+                    setAnimation(anim);
+                }
+            }
         }
     }
-
 
     public Bullet shootBullet() {
 
@@ -153,21 +178,11 @@ public class Player extends GameObject {
                 + " DMG!"
         );
 
-        Bullet bullet =
-            new Bullet(
-                x + width / 2 - 4,
-                y + height,
-                BulletType.AMULET,
-                damage
-            );
-
-        TextureRegion sprite =
-            AssetManager.getInstance()
-                .getTextureRegion("bullet_amulet");
-
-        bullet.setSprite(sprite);
-
-        return bullet;
+        return EntityFactory.createPlayerBullet(
+            x + width / 2f - 8,
+            y + height,
+            damage
+        );
     }
 
     public void shoot(Enemy enemy) {
@@ -191,18 +206,16 @@ public class Player extends GameObject {
     }
 
     public void shoot(Fairy fairy) {
-
         shoot((Enemy) fairy);
     }
 
     public void shoot(Boss boss) {
-
         shoot((Enemy) boss);
     }
 
     public void collectItem(Item item) {
 
-        if (item.isDestroyed()) {
+        if (item == null || item.isDestroyed()) {
             return;
         }
 
@@ -212,41 +225,33 @@ public class Player extends GameObject {
 
             case "POWER":
                 power++;
-
                 System.out.println(
                     name
-                        + " collected POWER item! Power increased to "
-                        + power
+                        + " collected POWER!"
                 );
                 break;
 
             case "POINT":
                 score += 100;
-
                 System.out.println(
                     name
-                        + " collected POINT item! Score increased to "
-                        + score
+                        + " collected POINT!"
                 );
                 break;
 
             case "BOMB":
                 spellCards++;
-
                 System.out.println(
                     name
-                        + " collected BOMB item! Spell Cards increased to "
-                        + spellCards
+                        + " collected BOMB!"
                 );
                 break;
 
             case "LIFE":
                 hp++;
-
                 System.out.println(
                     name
-                        + " collected LIFE item! HP increased to "
-                        + hp
+                        + " collected LIFE!"
                 );
                 break;
         }
@@ -262,22 +267,8 @@ public class Player extends GameObject {
             hp = 0;
         }
 
-        System.out.println(
-            name
-                + " took "
-                + damage
-                + " damage! HP: "
-                + hp
-        );
-
         if (hp <= 0) {
-
             destroy();
-
-            System.out.println(
-                name
-                    + " was defeated!"
-            );
         }
     }
 
@@ -293,39 +284,35 @@ public class Player extends GameObject {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public int getHp() {
         return hp;
-    }
-
-    public void setHp(int hp) {
-        this.hp = Math.max(0, hp);
     }
 
     public int getPower() {
         return power;
     }
 
-    public void setPower(int power) {
-        this.power = Math.max(0, power);
-    }
-
     public int getSpellCards() {
         return spellCards;
-    }
-
-    public void setSpellCards(int spellCards) {
-        this.spellCards = Math.max(0, spellCards);
     }
 
     public int getScore() {
         return score;
     }
 
+    public void setHp(int hp) {
+        this.hp = hp;
+    }
+
+    public void setPower(int power) {
+        this.power = power;
+    }
+
+    public void setSpellCards(int spellCards) {
+        this.spellCards = spellCards;
+    }
+
     public void setScore(int score) {
-        this.score = Math.max(0, score);
+        this.score = score;
     }
 }

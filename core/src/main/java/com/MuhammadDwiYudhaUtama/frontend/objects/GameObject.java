@@ -1,6 +1,7 @@
 package com.MuhammadDwiYudhaUtama.frontend.objects;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -18,9 +19,9 @@ public abstract class GameObject implements Collidable {
 
     protected boolean active = true;
 
-    protected TextureRegion sprite;
-    protected Animation<TextureRegion> animation;
-    protected float stateTime = 0f;
+    private TextureRegion sprite;
+    private Animation<TextureRegion> animation;
+    private float animationTime;
 
     public GameObject(
         float x,
@@ -36,15 +37,40 @@ public abstract class GameObject implements Collidable {
         this.height = height;
         this.speed = speed;
         this.color = color;
+        this.animationTime = 0f;
     }
 
     public void update(float delta) {
-        stateTime += delta;
+        if (animation != null) {
+            animationTime += delta;
+        }
     }
 
-    public void render(
-        ShapeRenderer shapeRenderer
-    ) {
+    public void render(SpriteBatch batch) {
+
+        if (batch == null || !active) {
+            return;
+        }
+
+        TextureRegion currentSprite = sprite;
+
+        if (animation != null) {
+            currentSprite =
+                animation.getKeyFrame(animationTime);
+        }
+
+        if (currentSprite != null) {
+            batch.draw(
+                currentSprite,
+                x,
+                y,
+                width,
+                height
+            );
+        }
+    }
+
+    public void render(ShapeRenderer shapeRenderer) {
 
         if (
             shapeRenderer != null
@@ -63,29 +89,23 @@ public abstract class GameObject implements Collidable {
         }
     }
 
-    public void render(SpriteBatch batch) {
-        if (batch != null && active) {
-            if (animation != null) {
-                TextureRegion currentFrame =
-                    animation.getKeyFrame(stateTime, true);
+    public void setSprite(TextureRegion sprite) {
+        this.sprite = sprite;
+    }
 
-                batch.draw(
-                    currentFrame,
-                    x,
-                    y,
-                    width,
-                    height
-                );
-            } else if (sprite != null) {
-                batch.draw(
-                    sprite,
-                    x,
-                    y,
-                    width,
-                    height
-                );
-            }
-        }
+    public TextureRegion getSprite() {
+        return sprite;
+    }
+
+    public void setAnimation(
+        Animation<TextureRegion> animation
+    ) {
+        this.animation = animation;
+        this.animationTime = 0f;
+    }
+
+    public Animation<TextureRegion> getAnimation() {
+        return animation;
     }
 
     public boolean isDestroyed() {
@@ -161,25 +181,8 @@ public abstract class GameObject implements Collidable {
         this.color = color;
     }
 
-    public TextureRegion getSprite() {
-        return sprite;
-    }
-
-    public void setSprite(TextureRegion sprite) {
-        this.sprite = sprite;
-    }
-
-    public Animation<TextureRegion> getAnimation() {
-        return animation;
-    }
-
-    public void setAnimation(Animation<TextureRegion> animation) {
-        this.animation = animation;
-    }
-
     @Override
     public Rectangle getCoreHitbox() {
-
         return new Rectangle(
             x,
             y,
@@ -190,7 +193,6 @@ public abstract class GameObject implements Collidable {
 
     @Override
     public Rectangle getGrazeHitbox() {
-
         return new Rectangle(
             x - 10,
             y - 10,

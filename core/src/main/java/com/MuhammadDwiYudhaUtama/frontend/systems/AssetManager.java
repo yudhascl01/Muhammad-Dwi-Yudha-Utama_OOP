@@ -55,12 +55,15 @@ public class AssetManager {
         int row,
         int col
     ) {
+        Texture texture = loadTexture(filename);
 
-        Texture tex = loadTexture(filename);
-
-        if (tex != null) {
+        if (texture != null) {
             TextureRegion[][] grid =
-                TextureRegion.split(tex, tileWidth, tileHeight);
+                TextureRegion.split(
+                    texture,
+                    tileWidth,
+                    tileHeight
+                );
 
             textureRegionMap.put(
                 key,
@@ -78,7 +81,6 @@ public class AssetManager {
         int numFrames,
         float frameDuration
     ) {
-
         registerAnimationFromSheet(
             key,
             filename,
@@ -103,14 +105,12 @@ public class AssetManager {
         float frameDuration,
         Animation.PlayMode playMode
     ) {
+        Texture texture = loadTexture(filename);
 
-        Texture tex = loadTexture(filename);
-
-        if (tex != null) {
-
+        if (texture != null) {
             TextureRegion[][] grid =
                 TextureRegion.split(
-                    tex,
+                    texture,
                     tileWidth,
                     tileHeight
                 );
@@ -119,22 +119,21 @@ public class AssetManager {
                 new TextureRegion[numFrames];
 
             for (int i = 0; i < numFrames; i++) {
-
                 frames[i] =
                     grid[row][startCol + i];
             }
 
-            Animation<TextureRegion> anim =
+            Animation<TextureRegion> animation =
                 new Animation<>(
                     frameDuration,
                     frames
                 );
 
-            anim.setPlayMode(playMode);
+            animation.setPlayMode(playMode);
 
             animationMap.put(
                 key,
-                anim
+                animation
             );
 
             textureRegionMap.put(
@@ -155,7 +154,6 @@ public class AssetManager {
         boolean flipX,
         boolean flipY
     ) {
-
         registerFlippedAnimationFromSheet(
             key,
             filename,
@@ -184,14 +182,12 @@ public class AssetManager {
         boolean flipX,
         boolean flipY
     ) {
+        Texture texture = loadTexture(filename);
 
-        Texture tex = loadTexture(filename);
-
-        if (tex != null) {
-
+        if (texture != null) {
             TextureRegion[][] grid =
                 TextureRegion.split(
-                    tex,
+                    texture,
                     tileWidth,
                     tileHeight
                 );
@@ -200,7 +196,6 @@ public class AssetManager {
                 new TextureRegion[numFrames];
 
             for (int i = 0; i < numFrames; i++) {
-
                 TextureRegion frame =
                     new TextureRegion(
                         grid[row][startCol + i]
@@ -214,17 +209,17 @@ public class AssetManager {
                 frames[i] = frame;
             }
 
-            Animation<TextureRegion> anim =
+            Animation<TextureRegion> animation =
                 new Animation<>(
                     frameDuration,
                     frames
                 );
 
-            anim.setPlayMode(playMode);
+            animation.setPlayMode(playMode);
 
             animationMap.put(
                 key,
-                anim
+                animation
             );
 
             textureRegionMap.put(
@@ -247,15 +242,40 @@ public class AssetManager {
     }
 
     public void init() {
-
         registerAnimationFromSheet(
             "player_idle",
             "player.png",
             32,
             48,
             0,
+            0,
+            8,
+            0.125f,
+            Animation.PlayMode.LOOP
+        );
+
+        registerAnimationFromSheet(
+            "player_left",
+            "player.png",
+            32,
+            48,
+            1,
+            0,
             4,
-            0.15f
+            0.12f,
+            Animation.PlayMode.LOOP
+        );
+
+        registerAnimationFromSheet(
+            "player_right",
+            "player.png",
+            32,
+            48,
+            2,
+            0,
+            4,
+            0.12f,
+            Animation.PlayMode.LOOP
         );
 
         registerAnimationFromSheet(
@@ -264,18 +284,76 @@ public class AssetManager {
             64,
             64,
             0,
+            0,
             4,
-            0.15f
+            0.2f,
+            Animation.PlayMode.LOOP
         );
 
         registerAnimationFromSheet(
-            "fairy_idle",
+            "boss_left",
+            "rumia.png",
+            64,
+            64,
+            1,
+            0,
+            4,
+            0.15f,
+            Animation.PlayMode.REVERSED
+        );
+
+        registerAnimationFromSheet(
+            "boss_right",
+            "rumia.png",
+            64,
+            64,
+            2,
+            0,
+            4,
+            0.15f,
+            Animation.PlayMode.NORMAL
+        );
+
+        registerAnimationFromSheet(
+            "fairy_idle_red",
+            "fairy.png",
+            32,
+            32,
+            1,
+            0,
+            8,
+            0.125f,
+            Animation.PlayMode.LOOP
+        );
+
+        registerAnimationFromSheet(
+            "fairy_idle_blue",
             "fairy.png",
             32,
             32,
             0,
-            4,
-            0.15f
+            0,
+            8,
+            0.125f,
+            Animation.PlayMode.LOOP
+        );
+
+        registerRegionFromSheet(
+            "bullet_amulet",
+            "amulet_reimu.png",
+            16,
+            16,
+            0,
+            0
+        );
+
+        registerRegionFromSheet(
+            "bullet_amulet_homing",
+            "amulet_reimu.png",
+            16,
+            16,
+            1,
+            0
         );
 
         registerRegionFromSheet(
@@ -283,8 +361,8 @@ public class AssetManager {
             "bullets_small.png",
             16,
             16,
-            1,
-            2
+            2,
+            3
         );
 
         registerRegionFromSheet(
@@ -311,7 +389,7 @@ public class AssetManager {
             16,
             16,
             0,
-            2
+            3
         );
 
         registerRegionFromSheet(
@@ -320,23 +398,11 @@ public class AssetManager {
             16,
             16,
             0,
-            3
+            5
         );
-
-        Texture amuletTexture =
-            loadTexture("amulet_reimu.png");
-
-        if (amuletTexture != null) {
-
-            registerRegion(
-                "bullet_amulet",
-                new TextureRegion(amuletTexture)
-            );
-        }
     }
 
     public void dispose() {
-
         for (Texture texture : textureMap.values()) {
             texture.dispose();
         }

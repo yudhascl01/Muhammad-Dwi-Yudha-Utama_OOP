@@ -1,31 +1,8 @@
 package com.MuhammadDwiYudhaUtama.frontend.objects.enemies;
 
-import com.MuhammadDwiYudhaUtama.frontend.objects.Collidable;
-import com.MuhammadDwiYudhaUtama.frontend.objects.Player;
 import com.badlogic.gdx.graphics.Color;
 
 public class Boss extends Enemy {
-
-    private float collisionCooldown;
-
-    public Boss(
-        String name,
-        int hp
-    ) {
-
-        super(
-            380,
-            400,
-            48,
-            48,
-            Color.BLUE,
-            name,
-            hp,
-            5000L
-        );
-
-        this.collisionCooldown = 0f;
-    }
 
     public Boss(
         float x,
@@ -33,49 +10,32 @@ public class Boss extends Enemy {
         String name,
         int hp
     ) {
-
         super(
             x,
             y,
-            48,
-            48,
-            Color.BLUE,
+            64,
+            64,
+            Color.RED,
             name,
             hp,
-            5000L
+            1000L
         );
+    }
 
-        this.collisionCooldown = 0f;
+    public Boss(
+        String name,
+        int hp
+    ) {
+        this(
+            0,
+            0,
+            name,
+            hp
+        );
     }
 
     @Override
     public void update(float delta) {
-
-        if (collisionCooldown > 0f) {
-
-            collisionCooldown -= delta;
-
-            if (collisionCooldown < 0f) {
-                collisionCooldown = 0f;
-            }
-        }
-    }
-
-    @Override
-    public void onCollision(
-        Collidable other
-    ) {
-
-        if (other instanceof Player) {
-
-            if (collisionCooldown <= 0f) {
-
-                System.out.println(
-                    "Player touches boss"
-                );
-
-                collisionCooldown = 1.0f;
-            }
-        }
+        super.update(delta);
     }
 }

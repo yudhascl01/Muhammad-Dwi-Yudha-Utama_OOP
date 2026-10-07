@@ -20,7 +20,7 @@ public class Bullet extends GameObject {
         super(
             x,
             y,
-            8,
+            16,
             16,
             400f,
             Color.YELLOW
@@ -40,7 +40,7 @@ public class Bullet extends GameObject {
         super(
             x,
             y,
-            8,
+            16,
             16,
             speed,
             Color.YELLOW
