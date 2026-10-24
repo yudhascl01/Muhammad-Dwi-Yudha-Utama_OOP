@@ -1,3 +1,4 @@
+
 package com.MuhammadDwiYudhaUtama.frontend.objects.enemies;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.Collidable;
@@ -12,7 +13,6 @@ public class Fairy extends Enemy {
         String name,
         int hp
     ) {
-
         super(
             150,
             380,
@@ -33,7 +33,6 @@ public class Fairy extends Enemy {
         String name,
         int hp
     ) {
-
         super(
             x,
             y,
@@ -50,9 +49,11 @@ public class Fairy extends Enemy {
 
     @Override
     public void update(float delta) {
+        // Perbarui waktu animasi melalui GameObject.
+        super.update(delta);
 
+        // Perbarui cooldown tabrakan.
         if (collisionCooldown > 0f) {
-
             collisionCooldown -= delta;
 
             if (collisionCooldown < 0f) {
@@ -62,14 +63,9 @@ public class Fairy extends Enemy {
     }
 
     @Override
-    public void onCollision(
-        Collidable other
-    ) {
-
+    public void onCollision(Collidable other) {
         if (other instanceof Player) {
-
             if (collisionCooldown <= 0f) {
-
                 System.out.println(
                     "Player touches fairy"
                 );

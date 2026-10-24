@@ -1,3 +1,4 @@
+
 package com.MuhammadDwiYudhaUtama.frontend.objects;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.bullets.Bullet;
@@ -6,6 +7,7 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Enemy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.systems.AssetManager;
+import com.MuhammadDwiYudhaUtama.frontend.systems.AudioSystem;
 import com.MuhammadDwiYudhaUtama.frontend.systems.EntityFactory;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -30,14 +32,7 @@ public class Player extends GameObject {
         int power,
         int spellCards
     ) {
-        super(
-            x,
-            y,
-            32,
-            48,
-            250f,
-            Color.RED
-        );
+        super(x, y, 32, 48, 250f, Color.RED);
 
         this.name = name;
         this.hp = hp;
@@ -52,14 +47,7 @@ public class Player extends GameObject {
         int power,
         int spellCards
     ) {
-        this(
-            0,
-            0,
-            name,
-            hp,
-            power,
-            spellCards
-        );
+        this(0, 0, name, hp, power, spellCards);
     }
 
     @Override
@@ -69,7 +57,6 @@ public class Player extends GameObject {
         float dx = 0;
 
         if (Gdx.input != null) {
-
             if (Gdx.input.isKeyPressed(Input.Keys.W)
                 || Gdx.input.isKeyPressed(Input.Keys.UP)) {
                 y += speed * delta;
@@ -113,52 +100,36 @@ public class Player extends GameObject {
     }
 
     public void updateAnimationState(float dx) {
-
-        AssetManager assets =
-            AssetManager.getInstance();
+        AssetManager assets = AssetManager.getInstance();
 
         if (dx < 0) {
-
             if (currentDir != -1) {
-
                 currentDir = -1;
 
                 Animation<TextureRegion> anim =
-                    assets.getAnimation(
-                        "player_left"
-                    );
+                    assets.getAnimation("player_left");
 
                 if (anim != null) {
                     setAnimation(anim);
                 }
             }
-
         } else if (dx > 0) {
-
             if (currentDir != 1) {
-
                 currentDir = 1;
 
                 Animation<TextureRegion> anim =
-                    assets.getAnimation(
-                        "player_right"
-                    );
+                    assets.getAnimation("player_right");
 
                 if (anim != null) {
                     setAnimation(anim);
                 }
             }
-
         } else {
-
             if (currentDir != 0) {
-
                 currentDir = 0;
 
                 Animation<TextureRegion> anim =
-                    assets.getAnimation(
-                        "player_idle"
-                    );
+                    assets.getAnimation("player_idle");
 
                 if (anim != null) {
                     setAnimation(anim);
@@ -168,14 +139,12 @@ public class Player extends GameObject {
     }
 
     public Bullet shootBullet() {
-
         int damage = 10 + power;
 
+        AudioSystem.getInstance().playBulletShot();
+
         System.out.println(
-            name
-                + " shoots bullet dealing "
-                + damage
-                + " DMG!"
+            name + " shoots bullet dealing " + damage + " DMG!"
         );
 
         return EntityFactory.createPlayerBullet(
@@ -186,7 +155,6 @@ public class Player extends GameObject {
     }
 
     public void shoot(Enemy enemy) {
-
         if (enemy == null || enemy.isDestroyed()) {
             return;
         }
@@ -194,12 +162,8 @@ public class Player extends GameObject {
         int damage = 10 + power;
 
         System.out.println(
-            name
-                + " shoots "
-                + enemy.getName()
-                + " for "
-                + damage
-                + " DMG!"
+            name + " shoots " + enemy.getName()
+                + " for " + damage + " DMG!"
         );
 
         enemy.takeDamage(damage);
@@ -214,7 +178,6 @@ public class Player extends GameObject {
     }
 
     public void collectItem(Item item) {
-
         if (item == null || item.isDestroyed()) {
             return;
         }
@@ -222,45 +185,35 @@ public class Player extends GameObject {
         String type = item.getItemType();
 
         switch (type) {
-
             case "POWER":
                 power++;
-                System.out.println(
-                    name
-                        + " collected POWER!"
-                );
+                System.out.println(name + " collected POWER!");
                 break;
 
             case "POINT":
                 score += 100;
-                System.out.println(
-                    name
-                        + " collected POINT!"
-                );
+                System.out.println(name + " collected POINT!");
                 break;
 
             case "BOMB":
                 spellCards++;
-                System.out.println(
-                    name
-                        + " collected BOMB!"
-                );
+                System.out.println(name + " collected BOMB!");
                 break;
 
             case "LIFE":
                 hp++;
-                System.out.println(
-                    name
-                        + " collected LIFE!"
-                );
+                System.out.println(name + " collected LIFE!");
                 break;
+
+            default:
+                return;
         }
 
+        AudioSystem.getInstance().playItemPickup();
         item.destroy();
     }
 
     public void takeDamage(int damage) {
-
         hp -= damage;
 
         if (hp < 0) {
@@ -274,7 +227,6 @@ public class Player extends GameObject {
 
     @Override
     public void onCollision(Collidable other) {
-
         if (other instanceof Item item) {
             collectItem(item);
         }

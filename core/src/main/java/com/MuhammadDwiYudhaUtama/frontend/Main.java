@@ -1,3 +1,4 @@
+
 package com.MuhammadDwiYudhaUtama.frontend;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.GameObject;
@@ -8,6 +9,7 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
 import com.MuhammadDwiYudhaUtama.frontend.systems.AssetManager;
+import com.MuhammadDwiYudhaUtama.frontend.systems.AudioSystem;
 import com.MuhammadDwiYudhaUtama.frontend.systems.EntityFactory;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -34,10 +36,16 @@ public class Main extends ApplicationAdapter {
         fairy = new ArrayList<>();
         entities = new ArrayList<>();
 
-        AssetManager assets =
-            AssetManager.getInstance();
-
+        AssetManager assets = AssetManager.getInstance();
         assets.init();
+
+        // Inisialisasi dan putar audio setelah LibGDX siap.
+        AudioSystem audio = AudioSystem.getInstance();
+        audio.init();
+
+        if (audio.isInitialized()) {
+            audio.playBgm();
+        }
 
         player = EntityFactory.createPlayer(
             280,
@@ -48,22 +56,20 @@ public class Main extends ApplicationAdapter {
             3
         );
 
-        Fairy redFairy =
-            EntityFactory.createFairy(
-                150,
-                380,
-                "Red Fairy",
-                20
-            );
+        Fairy redFairy = EntityFactory.createFairy(
+            150,
+            380,
+            "Red Fairy",
+            20
+        );
 
-        Fairy blueFairy =
-            EntityFactory.createFairy(
-                250,
-                380,
-                "Blue Fairy",
-                20,
-                "fairy_idle_blue"
-            );
+        Fairy blueFairy = EntityFactory.createFairy(
+            250,
+            380,
+            "Blue Fairy",
+            20,
+            "fairy_idle_blue"
+        );
 
         fairy.add(redFairy);
         fairy.add(blueFairy);
@@ -75,19 +81,17 @@ public class Main extends ApplicationAdapter {
             150
         );
 
-        Item powerItem =
-            EntityFactory.createItem(
-                200,
-                450,
-                ItemType.POWER
-            );
+        Item powerItem = EntityFactory.createItem(
+            200,
+            450,
+            ItemType.POWER
+        );
 
-        Item pointItem =
-            EntityFactory.createItem(
-                320,
-                480,
-                ItemType.POINT
-            );
+        Item pointItem = EntityFactory.createItem(
+            320,
+            480,
+            ItemType.POINT
+        );
 
         entities.add(player);
         entities.add(redFairy);
@@ -99,17 +103,11 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void render() {
-        float delta =
-            Gdx.graphics.getDeltaTime();
+        float delta = Gdx.graphics.getDeltaTime();
 
         update(delta);
 
-        ScreenUtils.clear(
-            0.1f,
-            0.1f,
-            0.15f,
-            1f
-        );
+        ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1f);
 
         batch.begin();
 
@@ -123,7 +121,6 @@ public class Main extends ApplicationAdapter {
     }
 
     private void update(float delta) {
-
         for (GameObject entity : entities) {
             if (!entity.isDestroyed()) {
                 entity.update(delta);
@@ -131,53 +128,40 @@ public class Main extends ApplicationAdapter {
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
-            Bullet bullet =
-                player.shootBullet();
-
+            Bullet bullet = player.shootBullet();
             entities.add(bullet);
         }
 
         handleCollisions();
-
         updateAndClean(entities);
     }
 
     private void handleCollisions() {
-
         for (GameObject entity : entities) {
-
             if (entity.isDestroyed()) {
                 continue;
             }
 
             for (GameObject other : entities) {
-
-                if (entity == other
-                    || other.isDestroyed()) {
+                if (entity == other || other.isDestroyed()) {
                     continue;
                 }
 
-                if (entity.getCoreHitbox()
-                    .overlaps(
-                        other.getCoreHitbox()
-                    )) {
-
+                if (entity.getCoreHitbox().overlaps(
+                    other.getCoreHitbox()
+                )) {
                     entity.onCollision(other);
                 }
             }
         }
     }
 
-    private <T extends GameObject>
-    void updateAndClean(
+    private <T extends GameObject> void updateAndClean(
         List<T> objects
     ) {
-
-        Iterator<T> iterator =
-            objects.iterator();
+        Iterator<T> iterator = objects.iterator();
 
         while (iterator.hasNext()) {
-
             T object = iterator.next();
 
             if (object.isDestroyed()) {
@@ -188,13 +172,12 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void dispose() {
+        AudioSystem.getInstance().dispose();
 
         if (batch != null) {
             batch.dispose();
         }
 
-        AssetManager
-            .getInstance()
-            .dispose();
+        AssetManager.getInstance().dispose();
     }
 }

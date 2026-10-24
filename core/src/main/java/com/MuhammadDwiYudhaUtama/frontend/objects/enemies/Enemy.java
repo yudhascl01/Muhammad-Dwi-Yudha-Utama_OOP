@@ -1,7 +1,9 @@
+
 package com.MuhammadDwiYudhaUtama.frontend.objects.enemies;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.GameObject;
 import com.MuhammadDwiYudhaUtama.frontend.objects.Player;
+import com.MuhammadDwiYudhaUtama.frontend.systems.AudioSystem;
 import com.badlogic.gdx.graphics.Color;
 
 public class Enemy extends GameObject {
@@ -12,11 +14,7 @@ public class Enemy extends GameObject {
 
     protected long scoreValue;
 
-    public Enemy(
-        String name,
-        int hp
-    ) {
-
+    public Enemy(String name, int hp) {
         super(
             200,
             380,
@@ -46,7 +44,6 @@ public class Enemy extends GameObject {
         int hp,
         long scoreValue
     ) {
-
         super(
             x,
             y,
@@ -66,24 +63,14 @@ public class Enemy extends GameObject {
         }
     }
 
-    public boolean takeDamage(
-        int damage
-    ) {
-
-        if (!isAlive()) {
+    public boolean takeDamage(int damage) {
+        if (!isAlive() || damage <= 0) {
             return false;
         }
 
-        if (damage <= 0) {
-            return false;
-        }
+        boolean wasAlive = getHp() > 0;
 
-        boolean wasAlive =
-            getHp() > 0;
-
-        setHp(
-            getHp() - damage
-        );
+        setHp(getHp() - damage);
 
         System.out.println(
             getName()
@@ -95,16 +82,14 @@ public class Enemy extends GameObject {
                 + getMaxHp()
         );
 
-        if (
-            wasAlive
-                && getHp() == 0
-        ) {
+        if (wasAlive && getHp() == 0) {
+            // Putar SFX tepat ketika musuh kalah.
+            AudioSystem.getInstance().playEnemyDeath();
 
             destroy();
 
             System.out.println(
-                getName()
-                    + " was defeated!"
+                getName() + " was defeated!"
             );
 
             return true;
@@ -113,11 +98,7 @@ public class Enemy extends GameObject {
         return false;
     }
 
-    public void attack(
-        Player player,
-        int damage
-    ) {
-
+    public void attack(Player player, int damage) {
         if (!isAlive()) {
             return;
         }
@@ -133,9 +114,7 @@ public class Enemy extends GameObject {
     }
 
     public boolean isAlive() {
-
-        return getHp() > 0
-            && !isDestroyed();
+        return getHp() > 0 && !isDestroyed();
     }
 
     public String getName() {
@@ -162,9 +141,7 @@ public class Enemy extends GameObject {
         return scoreValue;
     }
 
-    public void setScoreValue(
-        long scoreValue
-    ) {
+    public void setScoreValue(long scoreValue) {
         this.scoreValue = scoreValue;
     }
 }
