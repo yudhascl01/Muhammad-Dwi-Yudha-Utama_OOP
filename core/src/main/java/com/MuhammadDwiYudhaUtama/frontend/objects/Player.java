@@ -6,14 +6,17 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Boss;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Enemy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.ShootingPattern;
 import com.MuhammadDwiYudhaUtama.frontend.systems.AssetManager;
 import com.MuhammadDwiYudhaUtama.frontend.systems.AudioSystem;
+import com.MuhammadDwiYudhaUtama.frontend.systems.BulletManager;
 import com.MuhammadDwiYudhaUtama.frontend.systems.EntityFactory;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 
 public class Player extends GameObject {
 
@@ -23,6 +26,8 @@ public class Player extends GameObject {
     private int spellCards;
     private int score;
     private int currentDir = 0;
+
+    private ShootingPattern shootingPattern;
 
     public Player(
         float x,
@@ -54,7 +59,7 @@ public class Player extends GameObject {
     public void update(float delta) {
         super.update(delta);
 
-        float dx = 0;
+        float dx = 0f;
 
         if (Gdx.input != null) {
             if (Gdx.input.isKeyPressed(Input.Keys.W)
@@ -70,30 +75,30 @@ public class Player extends GameObject {
             if (Gdx.input.isKeyPressed(Input.Keys.A)
                 || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
                 x -= speed * delta;
-                dx = -1;
+                dx = -1f;
             }
 
             if (Gdx.input.isKeyPressed(Input.Keys.D)
                 || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
                 x += speed * delta;
-                dx = 1;
+                dx = 1f;
             }
         }
 
-        if (x < 0) {
-            x = 0;
+        if (x < 0f) {
+            x = 0f;
         }
 
-        if (y < 0) {
-            y = 0;
+        if (y < 0f) {
+            y = 0f;
         }
 
-        if (x + width > 480) {
-            x = 480 - width;
+        if (x + width > 480f) {
+            x = 480f - width;
         }
 
-        if (y + height > 480) {
-            y = 480 - height;
+        if (y + height > 480f) {
+            y = 480f - height;
         }
 
         updateAnimationState(dx);
@@ -102,7 +107,7 @@ public class Player extends GameObject {
     public void updateAnimationState(float dx) {
         AssetManager assets = AssetManager.getInstance();
 
-        if (dx < 0) {
+        if (dx < 0f) {
             if (currentDir != -1) {
                 currentDir = -1;
 
@@ -113,7 +118,7 @@ public class Player extends GameObject {
                     setAnimation(anim);
                 }
             }
-        } else if (dx > 0) {
+        } else if (dx > 0f) {
             if (currentDir != 1) {
                 currentDir = 1;
 
@@ -138,6 +143,7 @@ public class Player extends GameObject {
         }
     }
 
+    // Metode lama, dipertahankan untuk kompatibilitas.
     public Bullet shootBullet() {
         int damage = 10 + power;
 
@@ -148,9 +154,60 @@ public class Player extends GameObject {
         );
 
         return EntityFactory.createPlayerBullet(
-            x + width / 2f - 8,
+            x + width / 2f - 8f,
             y + height,
             damage
+        );
+    }
+
+    // Metode baru sesuai Modul 7.
+    public void shootBullet(BulletManager bulletManager) {
+        if (bulletManager == null || isDestroyed()) {
+            return;
+        }
+
+        int damage = 10 + power;
+
+        float originX = x + width / 2f - 8f;
+        float originY = y + height;
+
+        AudioSystem.getInstance().playBulletShot();
+
+        if (shootingPattern != null) {
+            shootingPattern.execute(
+                originX,
+                originY,
+                bulletManager,
+                true
+            );
+        } else {
+            bulletManager.spawnPlayerBullet(
+                originX,
+                originY,
+                0f,
+                400f,
+                damage
+            );
+        }
+    }
+
+    @Override
+    public Rectangle getCoreHitbox() {
+        return new Rectangle(
+            x + (width / 2f) - 4f,
+            y + (height / 2f) - 4f,
+            8f,
+            8f
+        );
+    }
+
+    @Override
+    public Rectangle getGrazeHitbox() {
+        return new Rectangle(
+            x,
+            y,
+            width,
+            height
         );
     }
 
@@ -266,5 +323,13 @@ public class Player extends GameObject {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    public ShootingPattern getShootingPattern() {
+        return shootingPattern;
+    }
+
+    public void setShootingPattern(ShootingPattern shootingPattern) {
+        this.shootingPattern = shootingPattern;
     }
 }
