@@ -21,10 +21,12 @@ import com.badlogic.gdx.math.Rectangle;
 public class Player extends GameObject {
 
     private String name;
+
     private int hp;
     private int power;
     private int spellCards;
     private int score;
+
     private int currentDir = 0;
 
     private ShootingPattern shootingPattern;
@@ -37,7 +39,14 @@ public class Player extends GameObject {
         int power,
         int spellCards
     ) {
-        super(x, y, 32, 48, 250f, Color.RED);
+        super(
+            x,
+            y,
+            32,
+            48,
+            250f,
+            Color.RED
+        );
 
         this.name = name;
         this.hp = hp;
@@ -52,7 +61,14 @@ public class Player extends GameObject {
         int power,
         int spellCards
     ) {
-        this(0, 0, name, hp, power, spellCards);
+        this(
+            0,
+            0,
+            name,
+            hp,
+            power,
+            spellCards
+        );
     }
 
     @Override
@@ -62,29 +78,38 @@ public class Player extends GameObject {
         float dx = 0f;
 
         if (Gdx.input != null) {
-            if (Gdx.input.isKeyPressed(Input.Keys.W)
-                || Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            if (
+                Gdx.input.isKeyPressed(Input.Keys.W)
+                    || Gdx.input.isKeyPressed(Input.Keys.UP)
+            ) {
                 y += speed * delta;
             }
 
-            if (Gdx.input.isKeyPressed(Input.Keys.S)
-                || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            if (
+                Gdx.input.isKeyPressed(Input.Keys.S)
+                    || Gdx.input.isKeyPressed(Input.Keys.DOWN)
+            ) {
                 y -= speed * delta;
             }
 
-            if (Gdx.input.isKeyPressed(Input.Keys.A)
-                || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            if (
+                Gdx.input.isKeyPressed(Input.Keys.A)
+                    || Gdx.input.isKeyPressed(Input.Keys.LEFT)
+            ) {
                 x -= speed * delta;
                 dx = -1f;
             }
 
-            if (Gdx.input.isKeyPressed(Input.Keys.D)
-                || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            if (
+                Gdx.input.isKeyPressed(Input.Keys.D)
+                    || Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+            ) {
                 x += speed * delta;
                 dx = 1f;
             }
         }
 
+        // Membatasi posisi pemain di area permainan.
         if (x < 0f) {
             x = 0f;
         }
@@ -105,7 +130,8 @@ public class Player extends GameObject {
     }
 
     public void updateAnimationState(float dx) {
-        AssetManager assets = AssetManager.getInstance();
+        AssetManager assets =
+            AssetManager.getInstance();
 
         if (dx < 0f) {
             if (currentDir != -1) {
@@ -143,14 +169,20 @@ public class Player extends GameObject {
         }
     }
 
-    // Metode lama, dipertahankan untuk kompatibilitas.
+    /**
+     * Metode menembak lama untuk kompatibilitas
+     * dengan kode yang masih menggunakannya.
+     */
     public Bullet shootBullet() {
         int damage = 10 + power;
 
         AudioSystem.getInstance().playBulletShot();
 
         System.out.println(
-            name + " shoots bullet dealing " + damage + " DMG!"
+            name
+                + " shoots bullet dealing "
+                + damage
+                + " DMG!"
         );
 
         return EntityFactory.createPlayerBullet(
@@ -160,16 +192,26 @@ public class Player extends GameObject {
         );
     }
 
-    // Metode baru sesuai Modul 7.
-    public void shootBullet(BulletManager bulletManager) {
-        if (bulletManager == null || isDestroyed()) {
+    /**
+     * Menembakkan bullet melalui BulletManager.
+     */
+    public void shootBullet(
+        BulletManager bulletManager
+    ) {
+        if (
+            bulletManager == null
+                || isDestroyed()
+        ) {
             return;
         }
 
         int damage = 10 + power;
 
-        float originX = x + width / 2f - 8f;
-        float originY = y + height;
+        float originX =
+            x + width / 2f - 8f;
+
+        float originY =
+            y + height;
 
         AudioSystem.getInstance().playBulletShot();
 
@@ -191,6 +233,9 @@ public class Player extends GameObject {
         }
     }
 
+    /**
+     * Core hitbox pemain berukuran 8 x 8 pixel.
+     */
     @Override
     public Rectangle getCoreHitbox() {
         return new Rectangle(
@@ -201,6 +246,9 @@ public class Player extends GameObject {
         );
     }
 
+    /**
+     * Graze hitbox mengikuti ukuran sprite pemain.
+     */
     @Override
     public Rectangle getGrazeHitbox() {
         return new Rectangle(
@@ -212,15 +260,22 @@ public class Player extends GameObject {
     }
 
     public void shoot(Enemy enemy) {
-        if (enemy == null || enemy.isDestroyed()) {
+        if (
+            enemy == null
+                || enemy.isDestroyed()
+        ) {
             return;
         }
 
         int damage = 10 + power;
 
         System.out.println(
-            name + " shoots " + enemy.getName()
-                + " for " + damage + " DMG!"
+            name
+                + " shoots "
+                + enemy.getName()
+                + " for "
+                + damage
+                + " DMG!"
         );
 
         enemy.takeDamage(damage);
@@ -234,8 +289,14 @@ public class Player extends GameObject {
         shoot((Enemy) boss);
     }
 
+    /**
+     * Mengambil item dan menerapkan efeknya.
+     */
     public void collectItem(Item item) {
-        if (item == null || item.isDestroyed()) {
+        if (
+            item == null
+                || item.isDestroyed()
+        ) {
             return;
         }
 
@@ -244,22 +305,34 @@ public class Player extends GameObject {
         switch (type) {
             case "POWER":
                 power++;
-                System.out.println(name + " collected POWER!");
+
+                System.out.println(
+                    name + " collected POWER!"
+                );
                 break;
 
             case "POINT":
                 score += 100;
-                System.out.println(name + " collected POINT!");
+
+                System.out.println(
+                    name + " collected POINT!"
+                );
                 break;
 
             case "BOMB":
                 spellCards++;
-                System.out.println(name + " collected BOMB!");
+
+                System.out.println(
+                    name + " collected BOMB!"
+                );
                 break;
 
             case "LIFE":
                 hp++;
-                System.out.println(name + " collected LIFE!");
+
+                System.out.println(
+                    name + " collected LIFE!"
+                );
                 break;
 
             default:
@@ -267,10 +340,15 @@ public class Player extends GameObject {
         }
 
         AudioSystem.getInstance().playItemPickup();
+
         item.destroy();
     }
 
     public void takeDamage(int damage) {
+        if (damage <= 0 || isDestroyed()) {
+            return;
+        }
+
         hp -= damage;
 
         if (hp < 0) {
@@ -325,11 +403,19 @@ public class Player extends GameObject {
         this.score = score;
     }
 
+    public void addScore(int points) {
+        if (points > 0) {
+            this.score += points;
+        }
+    }
+
     public ShootingPattern getShootingPattern() {
         return shootingPattern;
     }
 
-    public void setShootingPattern(ShootingPattern shootingPattern) {
+    public void setShootingPattern(
+        ShootingPattern shootingPattern
+    ) {
         this.shootingPattern = shootingPattern;
     }
 }

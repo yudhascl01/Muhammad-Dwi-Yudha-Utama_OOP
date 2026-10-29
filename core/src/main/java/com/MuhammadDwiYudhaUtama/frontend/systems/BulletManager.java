@@ -11,41 +11,40 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.BulletType;
 import com.MuhammadDwiYudhaUtama.frontend.objects.bullets.Bullet;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-public class  BulletManager {
+public class BulletManager {
 
-    private Queue<Bullet> playerBulletPool;
-    private Queue<Bullet> enemyBulletPool;
+    private final Queue<Bullet> playerBulletPool =
+        new LinkedList<>();
 
-    private List<Bullet> activePlayerBullets;
-    private List<Bullet> activeEnemyBullets;
+    private final Queue<Bullet> enemyBulletPool =
+        new LinkedList<>();
 
-    public BulletManager() {
-        playerBulletPool = new LinkedList<>();
-        enemyBulletPool = new LinkedList<>();
+    private final List<Bullet> activePlayerBullets =
+        new ArrayList<>();
 
-        activePlayerBullets = new ArrayList<>();
-        activeEnemyBullets = new ArrayList<>();
-    }
+    private final List<Bullet> activeEnemyBullets =
+        new ArrayList<>();
 
-    // Peminjaman bullet Pemain dari Pool (5 poin)
-    public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage) {
-        Bullet bullet;
-        // TODO:
-        // 1. Cek apakah playerBulletPool tidak kosong.
-        //    Kalau ya, poll dari pool. Kalau tidak, buat baru menggunakan Factory.
-        bullet = playerBulletPool.poll();
+    /**
+     * Meminjam atau membuat bullet pemain.
+     */
+    public Bullet spawnPlayerBullet(
+        float x,
+        float y,
+        float vx,
+        float vy,
+        int damage
+    ) {
+        Bullet bullet = playerBulletPool.poll();
 
         if (bullet == null) {
-            bullet = new Bullet(
+            bullet = EntityFactory.createPlayerBullet(
                 x,
                 y,
-                BulletType.AMULET,
                 damage
             );
         }
 
-
-        // 2. Re-initialize bullet.
         bullet.init(
             x,
             y,
@@ -56,32 +55,31 @@ public class  BulletManager {
             true
         );
 
-        // 3. Tambahkan bullet ke dalam daftar activePlayerBullets.
         activePlayerBullets.add(bullet);
 
-        // 4. Kembalikan instance bullet tersebut.
         return bullet;
     }
 
-    // Peminjaman bullet Musuh dari Pool (5 poin)
-    public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage) {
-        Bullet bullet;
-        // TODO:
-        // 1. Cek apakah enemyBulletPool tidak kosong:
-        //    Kalau ya, poll dari pool. Kalau tidak, buat baru menggunakan Factory.
-
-        bullet = enemyBulletPool.poll();
+    /**
+     * Meminjam atau membuat bullet musuh.
+     */
+    public Bullet spawnEnemyBullet(
+        float x,
+        float y,
+        float vx,
+        float vy,
+        int damage
+    ) {
+        Bullet bullet = enemyBulletPool.poll();
 
         if (bullet == null) {
-            bullet = new Bullet(
+            bullet = EntityFactory.createEnemyBullet(
                 x,
                 y,
-                BulletType.DANMAKU,
                 damage
             );
         }
 
-        // 2. Re-initialize bullet.
         bullet.init(
             x,
             y,
@@ -91,56 +89,128 @@ public class  BulletManager {
             damage,
             false
         );
-        // 3. Tambahkan bullet ke dalam daftar activeEnemyBullets
+
         activeEnemyBullets.add(bullet);
-        // 4. Kembalikan instance bullet tersebut
+
         return bullet;
     }
 
+    /**
+     * Memperbarui posisi bullet dan mendaur ulang
+     * bullet yang hancur atau keluar dari layar.
+     */
+    public void update(
+        float delta,
+        float screenWidth,
+        float screenHeight
+    ) {
+        updateBulletList(
+            activePlayerBullets,
+            playerBulletPool,
+            delta,
+            screenWidth,
+            screenHeight
+        );
 
+        updateBulletList(
+            activeEnemyBullets,
+            enemyBulletPool,
+            delta,
+            screenWidth,
+            screenHeight
+        );
+    }
 
-    // Memindahkan peluru nonaktif kembali ke pool.
-    public void update(float delta, float screenWidth, float screenHeight) {
-        Iterator<Bullet> playerIterator =
-            activePlayerBullets.iterator();
+    private void updateBulletList(
+        List<Bullet> activeBullets,
+        Queue<Bullet> pool,
+        float delta,
+        float screenWidth,
+        float screenHeight
+    ) {
+        Iterator<Bullet> iterator =
+            activeBullets.iterator();
 
-        while (playerIterator.hasNext()) {
-            Bullet bullet = playerIterator.next();
+        while (iterator.hasNext()) {
+            Bullet bullet = iterator.next();
 
-            if (bullet.isDestroyed()) {
-                playerIterator.remove();
-                playerBulletPool.offer(bullet);
+            if (!bullet.isDestroyed()) {
+                bullet.update(delta);
             }
-        }
 
-        Iterator<Bullet> enemyIterator =
-            activeEnemyBullets.iterator();
+            if (
+                bullet.isDestroyed()
+                    || bullet.isOffScreen(
+                    screenWidth,
+                    screenHeight
+                )
+            ) {
+                bullet.destroy();
 
-        while (enemyIterator.hasNext()) {
-            Bullet bullet = enemyIterator.next();
+                iterator.remove();
 
-            if (bullet.isDestroyed()) {
-                enemyIterator.remove();
-                enemyBulletPool.offer(bullet);
+                pool.offer(bullet);
             }
         }
     }
 
+    /**
+     * Mendaur ulang bullet yang dihancurkan oleh
+     * CollisionReferee setelah proses collision.
+     */
+    public void recycleInactiveBullets() {
+        recycleList(
+            activePlayerBullets,
+            playerBulletPool
+        );
+
+        recycleList(
+            activeEnemyBullets,
+            enemyBulletPool
+        );
+    }
+
+    private void recycleList(
+        List<Bullet> activeBullets,
+        Queue<Bullet> pool
+    ) {
+        Iterator<Bullet> iterator =
+            activeBullets.iterator();
+
+        while (iterator.hasNext()) {
+            Bullet bullet = iterator.next();
+
+            if (bullet.isDestroyed()) {
+                iterator.remove();
+                pool.offer(bullet);
+            }
+        }
+    }
+
+    /**
+     * Merender semua bullet aktif.
+     * Method ini dipanggil di antara batch.begin()
+     * dan batch.end().
+     */
     public void render(SpriteBatch batch) {
-        for (Bullet b : activePlayerBullets) {
-            if (!b.isDestroyed()) b.render(batch);
+        for (Bullet bullet : activePlayerBullets) {
+            if (!bullet.isDestroyed()) {
+                bullet.render(batch);
+            }
         }
-        for (Bullet b : activeEnemyBullets) {
-            if (!b.isDestroyed()) b.render(batch);
+
+        for (Bullet bullet : activeEnemyBullets) {
+            if (!bullet.isDestroyed()) {
+                bullet.render(batch);
+            }
         }
     }
-
 
     public List<Bullet> getActivePlayerBullets() {
         return activePlayerBullets;
     }
 
-    public static List<Bullet> getActiveEnemyBullets() {
+    public List<Bullet> getActiveEnemyBullets() {
         return activeEnemyBullets;
     }
 
