@@ -1,4 +1,3 @@
-
 package com.MuhammadDwiYudhaUtama.frontend.systems;
 
 import java.util.ArrayList;
@@ -101,11 +100,25 @@ public class CollisionReferee {
                         player.getCoreHitbox()
                     )
                 ) {
-                    player.takeDamage(
-                        bullet.getDamage()
-                    );
+                    if (!player.isInvulnerable()) {
+                        System.out.println(
+                            "[CollisionReferee] CORE HIT! Enemy Bullet hit "
+                                + player.getName()
+                                + " for "
+                                + bullet.getDamage()
+                                + " DMG!"
+                        );
 
-                    bullet.destroy();
+                        player.takeDamage(
+                            100,
+                            bulletManager,
+                            entities
+                        );
+
+                        bullet.destroy();
+
+                        break;
+                    }
                 }
 
                 // Prioritas 2: Graze Hit
@@ -117,7 +130,7 @@ public class CollisionReferee {
                 ) {
                     bullet.setGrazed(true);
 
-                    player.addScore(50);
+                    player.addGraze();
 
                     System.out.println(
                         "[CollisionReferee] GRAZE! "
@@ -160,11 +173,23 @@ public class CollisionReferee {
                 else if (entity instanceof Enemy enemy) {
                     if (
                         !enemy.isDestroyed()
+                            && !player.isInvulnerable()
                             && player.getCoreHitbox().overlaps(
                             enemy.getCoreHitbox()
                         )
                     ) {
-                        player.takeDamage(10);
+                        System.out.println(
+                            "[CollisionReferee] CORE COLLISION! "
+                                + "Player collided with "
+                                + enemy.getName()
+                                + "!"
+                        );
+
+                        player.takeDamage(
+                            100,
+                            bulletManager,
+                            entities
+                        );
                     }
                 }
             }

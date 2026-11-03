@@ -42,6 +42,8 @@ public class Player extends GameObject {
 
     private int currentDir = 0;
 
+    private List<GameObserver> observers = new ArrayList<>();
+
     public Player(
         float x,
         float y,
@@ -92,10 +94,8 @@ public class Player extends GameObject {
 
     // Pergerakan pemain
     public void move(float dx, float dy) {
-        float movementSpeed = focused ? speed * 0.5f : speed;
-
-        this.x += dx * movementSpeed;
-        this.y += dy * movementSpeed;
+        this.x += dx * speed;
+        this.y += dy * speed;
 
         clampToPlayfield();
     }
@@ -207,6 +207,7 @@ public class Player extends GameObject {
     ) {
         if (spellCards > 0) {
             spellCards--;
+            notifySpellCardsChanged();
 
             invulnerableTimer = 5.0f;
 
@@ -231,8 +232,11 @@ public class Player extends GameObject {
 
     // Menambahkan graze
     public void addGraze() {
-        grazeCount++;
+        this.grazeCount++;
+
         addScore(50);
+
+        notifyGrazeChanged();
     }
 
     @Override
@@ -290,6 +294,8 @@ public class Player extends GameObject {
             switch (type) {
                 case POWER -> {
                     power += type.getPowerBonus();
+                    notifyPowerChanged();
+
                     addScore((int) item.getScoreValue());
 
                     System.out.println(
@@ -308,6 +314,8 @@ public class Player extends GameObject {
 
                 case BOMB -> {
                     spellCards++;
+                    notifySpellCardsChanged();
+
                     addScore((int) item.getScoreValue());
 
                     System.out.println(
@@ -319,6 +327,10 @@ public class Player extends GameObject {
                 case LIFE -> {
                     lives++;
                     hp = 100;
+
+                    notifyLivesChanged();
+                    notifyHpChanged();
+
                     addScore((int) item.getScoreValue());
 
                     System.out.println(
@@ -365,6 +377,8 @@ public class Player extends GameObject {
             hp = 0;
         }
 
+        notifyHpChanged();
+
         System.out.println(
             name + " took " + damage
                 + " damage! Remaining HP: " + hp
@@ -384,6 +398,7 @@ public class Player extends GameObject {
         List<GameObject> entities
     ) {
         lives--;
+        notifyLivesChanged();
 
         if (bulletManager != null) {
             bulletManager.clearEnemyBullets();
@@ -421,6 +436,10 @@ public class Player extends GameObject {
 
         power = Math.max(10, power - 16);
         spellCards = 3;
+
+        notifyHpChanged();
+        notifyPowerChanged();
+        notifySpellCardsChanged();
     }
 
     public void resetGame() {
@@ -437,6 +456,13 @@ public class Player extends GameObject {
 
         invulnerableTimer = 3.0f;
         shootTimer = 0.1f;
+
+        notifyLivesChanged();
+        notifyHpChanged();
+        notifyPowerChanged();
+        notifySpellCardsChanged();
+        notifyScoreChanged();
+        notifyGrazeChanged();
     }
 
     public boolean isAlive() {
@@ -529,6 +555,7 @@ public class Player extends GameObject {
 
     public void setLives(int lives) {
         this.lives = lives;
+        notifyLivesChanged();
     }
 
     public int getPower() {
@@ -557,23 +584,28 @@ public class Player extends GameObject {
 
     public void setHp(int hp) {
         this.hp = hp;
+        notifyHpChanged();
     }
 
     public void setPower(int power) {
         this.power = power;
+        notifyPowerChanged();
     }
 
     public void setSpellCards(int spellCards) {
         this.spellCards = spellCards;
+        notifySpellCardsChanged();
     }
 
     public void setScore(long score) {
         this.score = score;
+        notifyScoreChanged();
     }
 
     public void addScore(int points) {
         if (points > 0) {
             score += points;
+            notifyScoreChanged();
         }
     }
 
@@ -604,9 +636,18 @@ public class Player extends GameObject {
         //      * observer.onSpellCardsChanged(spellCards);
         //      * observer.onPowerChanged(power);
         //      * observer.onGrazeChanged(grazeCount);
+        if (observer != null && !observers.contains(observer)) {
+            observers.add(observer);
+
+            observer.onScoreChanged(score);
+            observer.onHpChanged(hp);
+            observer.onLivesChanged(lives);
+            observer.onSpellCardsChanged(spellCards);
+            observer.onPowerChanged(power);
+            observer.onGrazeChanged(grazeCount);
+        }
     }
 
-    List<String> observers = new ArrayList<>();
     public void removeObserver(GameObserver observer) {
         observers.remove(observer);
     }
@@ -616,37 +657,42 @@ public class Player extends GameObject {
     //       dan memanggil metode callback yang bersesuaian:
     // 1. notifyScoreChanged()      -> memanggil obs.onScoreChanged(score)
     private void notifyScoreChanged() {
-        for(GameObserver obs : observers) {
+        for (GameObserver obs : observers) {
             obs.onScoreChanged(score);
         }
     }
+
     // 2. notifyHpChanged()         -> memanggil obs.onHpChanged(hp)
     private void notifyHpChanged() {
-        for(GameObserver obs : observers) {
-            obs.onHpChanged(score);
+        for (GameObserver obs : observers) {
+            obs.onHpChanged(hp);
         }
     }
+
     // 3. notifyLivesChanged()      -> memanggil obs.onLivesChanged(lives) (Sistem Nyawa Touhou)
     private void notifyLivesChanged() {
-        for(GameObserver obs : observers) {
-            obs.onLivesChanged(score);
+        for (GameObserver obs : observers) {
+            obs.onLivesChanged(lives);
         }
     }
+
     // 4. notifySpellCardsChanged() -> memanggil obs.onSpellCardsChanged(spellCards)
     private void notifySpellCardsChanged() {
-        for(GameObserver obs : observers) {
-            obs.onSpellCardsChanged(score);
+        for (GameObserver obs : observers) {
+            obs.onSpellCardsChanged(spellCards);
         }
     }
+
     // 5. notifyPowerChanged()      -> memanggil obs.onPowerChanged(power)
     private void notifyPowerChanged() {
-        for(GameObserver obs : observers) {
-            obs.onPowerChanged(score);
+        for (GameObserver obs : observers) {
+            obs.onPowerChanged(power);
         }
     }
+
     // 6. notifyGrazeChanged()      -> memanggil obs.onGrazeChanged(grazeCount)
     private void notifyGrazeChanged() {
-        for(GameObserver obs : observers) {
+        for (GameObserver obs : observers) {
             obs.onGrazeChanged(grazeCount);
         }
     }

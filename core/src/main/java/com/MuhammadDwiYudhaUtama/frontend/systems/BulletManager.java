@@ -9,6 +9,7 @@ import java.util.Queue;
 import com.MuhammadDwiYudhaUtama.frontend.objects.BulletType;
 import com.MuhammadDwiYudhaUtama.frontend.objects.GameObject;
 import com.MuhammadDwiYudhaUtama.frontend.objects.bullets.Bullet;
+import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -175,13 +176,13 @@ public class BulletManager {
             Bullet bullet = iterator.next();
 
             if (entities != null) {
-                entities.add(
-                    EntityFactory.createItem(
-                        bullet.getX(),
-                        bullet.getY(),
-                        ItemType.POINT
-                    )
+                Item pointItem = EntityFactory.createItem(
+                    bullet.getX(),
+                    bullet.getY(),
+                    ItemType.POINT
                 );
+
+                entities.add(pointItem);
             }
 
             bullet.destroy();

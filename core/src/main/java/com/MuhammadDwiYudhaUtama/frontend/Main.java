@@ -1,4 +1,3 @@
-
 package com.MuhammadDwiYudhaUtama.frontend;
 
 import java.util.ArrayList;
@@ -7,6 +6,7 @@ import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
@@ -144,42 +144,7 @@ public class Main extends ApplicationAdapter {
         // HUD
         gameHUD = new GameHUD();
 
-        updateHudValues();
-    }
-
-    // =====================================
-    // UPDATE HUD
-    // =====================================
-
-    private void updateHudValues() {
-
-        if (player == null || gameHUD == null) {
-            return;
-        }
-
-        gameHUD.onScoreChanged(
-            player.getScore()
-        );
-
-        gameHUD.onHpChanged(
-            player.getHp()
-        );
-
-        gameHUD.onSpellCardsChanged(
-            player.getSpellCards()
-        );
-
-        gameHUD.onPowerChanged(
-            player.getPower()
-        );
-
-        gameHUD.onGrazeChanged(
-            player.getGrazeCount()
-        );
-
-        gameHUD.onLivesChanged(
-            player.getLives()
-        );
+        player.registerObserver(gameHUD);
     }
 
     // =====================================
@@ -246,8 +211,6 @@ public class Main extends ApplicationAdapter {
         entities.add(pointItem);
 
         inputHandler.setEntities(entities);
-
-        updateHudValues();
     }
 
     // =====================================
@@ -259,25 +222,20 @@ public class Main extends ApplicationAdapter {
 
         float delta = Gdx.graphics.getDeltaTime();
 
-        float screenWidth = Gdx.graphics.getWidth();
-
-        float screenHeight = Gdx.graphics.getHeight();
-
         // =====================================
-        // 1. RESTART
+        // 0. RESTART GAME
         // =====================================
 
         if (
-            player.isGameOver()
-                && Gdx.input.isKeyJustPressed(
-                com.badlogic.gdx.Input.Keys.R
-            )
+            Gdx.input != null
+                && Gdx.input.isKeyJustPressed(Input.Keys.R)
+                && player.isGameOver()
         ) {
             restartGame();
         }
 
         // =====================================
-        // 2. INPUT HANDLER
+        // 1. INPUT HANDLER
         // =====================================
 
         if (!player.isDestroyed()) {
@@ -295,18 +253,18 @@ public class Main extends ApplicationAdapter {
         }
 
         // =====================================
-        // 3. UPDATE ENTITIES
+        // 2. UPDATE ENTITIES
         // =====================================
 
         updateAndClean(
             entities,
             delta,
-            screenWidth,
-            screenHeight
+            416,
+            560
         );
 
         // =====================================
-        // 4. BOSS ATTACK
+        // 3. BOSS ATTACK
         // =====================================
 
         if (boss != null && !boss.isDestroyed()) {
@@ -319,17 +277,17 @@ public class Main extends ApplicationAdapter {
         }
 
         // =====================================
-        // 5. UPDATE BULLETS
+        // 4. UPDATE BULLETS
         // =====================================
 
         bulletManager.update(
             delta,
-            screenWidth,
-            screenHeight
+            416,
+            560
         );
 
         // =====================================
-        // 6. COLLISION
+        // 5. COLLISION
         // =====================================
 
         collisionReferee.resolveCollisions(
@@ -339,19 +297,13 @@ public class Main extends ApplicationAdapter {
         );
 
         // =====================================
-        // 7. RECYCLE BULLETS
+        // 6. RECYCLE BULLETS
         // =====================================
 
         bulletManager.recycleInactiveBullets();
 
         // =====================================
-        // 8. UPDATE HUD
-        // =====================================
-
-        updateHudValues();
-
-        // =====================================
-        // 9. CLEAR SCREEN
+        // 7. CLEAR SCREEN
         // =====================================
 
         ScreenUtils.clear(
@@ -362,13 +314,7 @@ public class Main extends ApplicationAdapter {
         );
 
         // =====================================
-        // 10. RENDER HUD BACKGROUND
-        // =====================================
-
-        gameHUD.renderBackground();
-
-        // =====================================
-        // 11. RENDER SPRITES
+        // 8. RENDER SPRITES
         // =====================================
 
         batch.begin();
@@ -389,7 +335,13 @@ public class Main extends ApplicationAdapter {
         batch.end();
 
         // =====================================
-        // 12. FOCUS INDICATOR
+        // 9. RENDER HUD BACKGROUND
+        // =====================================
+
+        gameHUD.renderBackground();
+
+        // =====================================
+        // 10. FOCUS INDICATOR
         // =====================================
 
         player.renderFocusIndicator(
