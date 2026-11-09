@@ -5,6 +5,8 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.BulletType;
 import com.MuhammadDwiYudhaUtama.frontend.objects.Collidable;
 import com.MuhammadDwiYudhaUtama.frontend.objects.GameObject;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Enemy;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.bulletStrategy.BulletMovementPattern;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -16,11 +18,19 @@ public class Bullet extends GameObject {
     private float vx;
     private float vy;
     private float angle = 90f;
+    private float stateTime = 0f;
+
     private boolean isPlayerBullet;
     private boolean grazed;
 
-    // Konstruktor dengan kecepatan default 400f.
-    public Bullet(float x, float y, BulletType bulletType, int damage) {
+    private BulletMovementPattern movementPattern;
+
+    public Bullet(
+        float x,
+        float y,
+        BulletType bulletType,
+        int damage
+    ) {
         super(x, y, 16, 16, 400f, Color.YELLOW);
 
         this.bulletType = bulletType;
@@ -32,7 +42,6 @@ public class Bullet extends GameObject {
         this.grazed = false;
     }
 
-    // Konstruktor dengan kecepatan custom.
     public Bullet(
         float x,
         float y,
@@ -51,7 +60,6 @@ public class Bullet extends GameObject {
         this.grazed = false;
     }
 
-    // Mengaktifkan kembali peluru yang dipinjam dari object pool.
     public void init(
         float x,
         float y,
@@ -79,8 +87,9 @@ public class Bullet extends GameObject {
 
         this.active = true;
         this.grazed = false;
+        this.stateTime = 0f;
+        this.movementPattern = null;
 
-        // Mereset waktu animasi ke 0.
         setAnimation(getAnimation());
     }
 
@@ -92,8 +101,14 @@ public class Bullet extends GameObject {
             return;
         }
 
-        x += vx * delta;
-        y += vy * delta;
+        stateTime += delta;
+
+        if (movementPattern != null) {
+            movementPattern.move(this, delta);
+        } else {
+            x += vx * delta;
+            y += vy * delta;
+        }
     }
 
     @Override
@@ -132,6 +147,16 @@ public class Bullet extends GameObject {
         }
     }
 
+    public BulletMovementPattern getMovementPattern() {
+        return movementPattern;
+    }
+
+    public void setMovementPattern(
+        BulletMovementPattern movementPattern
+    ) {
+        this.movementPattern = movementPattern;
+    }
+
     public BulletType getBulletType() {
         return bulletType;
     }
@@ -158,6 +183,10 @@ public class Bullet extends GameObject {
 
     public void setAngle(float angle) {
         this.angle = angle;
+    }
+
+    public float getStateTime() {
+        return stateTime;
     }
 
     public boolean hasBeenGrazed() {

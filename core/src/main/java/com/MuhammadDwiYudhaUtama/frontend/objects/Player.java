@@ -1,3 +1,4 @@
+
 package com.MuhammadDwiYudhaUtama.frontend.objects;
 
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 
-public class Player extends GameObject {
+public class Player extends EntityShooter {
 
     private String name;
 
@@ -31,8 +32,6 @@ public class Player extends GameObject {
     private int power;
     private int spellCards;
     private long score;
-
-    private ShootingPattern shootingPattern;
 
     private int grazeCount = 0;
     private boolean focused = false;
@@ -167,9 +166,14 @@ public class Player extends GameObject {
         );
     }
 
-    // Menembak menggunakan cooldown
+    // Menembak menggunakan cooldown dan Shooting Pattern
+    @Override
     public void shootBullet(BulletManager bulletManager) {
-        if (bulletManager == null || isDestroyed()) {
+        if (
+            bulletManager == null ||
+                isDestroyed() ||
+                !active
+        ) {
             return;
         }
 
@@ -179,8 +183,10 @@ public class Player extends GameObject {
 
             AudioSystem.getInstance().playBulletShot();
 
-            if (shootingPattern != null) {
-                shootingPattern.execute(
+            ShootingPattern pattern = getShootingPattern();
+
+            if (pattern != null) {
+                pattern.execute(
                     originX,
                     originY,
                     bulletManager,
@@ -609,33 +615,8 @@ public class Player extends GameObject {
         }
     }
 
-    public ShootingPattern getShootingPattern() {
-        return shootingPattern;
-    }
-
-    public void setShootingPattern(
-        ShootingPattern shootingPattern
-    ) {
-        this.shootingPattern = shootingPattern;
-    }
-
-    // TODO: Deklarasikan atribut private List<GameObserver> observers dan inisialisasi dengan ArrayList kosong
-
-    // ... konstruktor dan hitbox ...
-
-    // Registrasi & Penghapusan Observer (4 poin)
+    // Registrasi & Penghapusan Observer
     public void registerObserver(GameObserver observer) {
-        // TODO:
-        // 1. Cek apakah observer tidak null DAN belum ada di dalam list observers (!observers.contains(observer)).
-        // 2. Jika memenuhi syarat:
-        //    - Tambahkan observer ke dalam list observers.
-        //    - Pancarkan seluruh state awal pemain saat ini ke observer tersebut:
-        //      * observer.onScoreChanged(score);
-        //      * observer.onHpChanged(hp);
-        //      * observer.onLivesChanged(lives);
-        //      * observer.onSpellCardsChanged(spellCards);
-        //      * observer.onPowerChanged(power);
-        //      * observer.onGrazeChanged(grazeCount);
         if (observer != null && !observers.contains(observer)) {
             observers.add(observer);
 
@@ -652,45 +633,37 @@ public class Player extends GameObject {
         observers.remove(observer);
     }
 
-    // Metode Pemancar Notifikasi ke Seluruh Observer (4 poin)
-    // TODO: Buat 6 metode private void berikut yang MELAKUKAN LOOP KE SELURUH ELEMEN DI 'observers'
-    //       dan memanggil metode callback yang bersesuaian:
-    // 1. notifyScoreChanged()      -> memanggil obs.onScoreChanged(score)
+    // Metode Pemancar Notifikasi ke Seluruh Observer
     private void notifyScoreChanged() {
         for (GameObserver obs : observers) {
             obs.onScoreChanged(score);
         }
     }
 
-    // 2. notifyHpChanged()         -> memanggil obs.onHpChanged(hp)
     private void notifyHpChanged() {
         for (GameObserver obs : observers) {
             obs.onHpChanged(hp);
         }
     }
 
-    // 3. notifyLivesChanged()      -> memanggil obs.onLivesChanged(lives) (Sistem Nyawa Touhou)
     private void notifyLivesChanged() {
         for (GameObserver obs : observers) {
             obs.onLivesChanged(lives);
         }
     }
 
-    // 4. notifySpellCardsChanged() -> memanggil obs.onSpellCardsChanged(spellCards)
     private void notifySpellCardsChanged() {
         for (GameObserver obs : observers) {
             obs.onSpellCardsChanged(spellCards);
         }
     }
 
-    // 5. notifyPowerChanged()      -> memanggil obs.onPowerChanged(power)
     private void notifyPowerChanged() {
         for (GameObserver obs : observers) {
             obs.onPowerChanged(power);
         }
     }
 
-    // 6. notifyGrazeChanged()      -> memanggil obs.onGrazeChanged(grazeCount)
     private void notifyGrazeChanged() {
         for (GameObserver obs : observers) {
             obs.onGrazeChanged(grazeCount);

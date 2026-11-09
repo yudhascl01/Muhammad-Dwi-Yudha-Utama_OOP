@@ -22,6 +22,7 @@ public abstract class GameObject implements Collidable {
     private TextureRegion sprite;
     private Animation<TextureRegion> animation;
     private float animationTime;
+    private float stateTime;
 
     public GameObject(
         float x,
@@ -206,4 +207,12 @@ public abstract class GameObject implements Collidable {
         Collidable other
     ) {
     }
+
+    public void setActive(boolean active) { this.active = active; }
+
+    public float getStateTime() {
+        float stateTime = 0;
+        return stateTime; }
+    public void setStateTime(float stateTime) { this.stateTime = stateTime; }
+
 }

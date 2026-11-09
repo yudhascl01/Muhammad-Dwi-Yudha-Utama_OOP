@@ -2,7 +2,9 @@
 package com.MuhammadDwiYudhaUtama.frontend.objects.patterns.shootingStrategy;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.GameObject;
+import com.MuhammadDwiYudhaUtama.frontend.objects.bullets.Bullet;
 import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.ShootingPattern;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.bulletStrategy.BulletMovementPattern;
 import com.MuhammadDwiYudhaUtama.frontend.systems.BulletManager;
 
 public class SpreadShot implements ShootingPattern {
@@ -10,18 +12,28 @@ public class SpreadShot implements ShootingPattern {
     private float speed;
     private int numBullets;
     private float spreadAngleDegrees;
-    private GameObject target;
+    private int damage = 15;
 
-    // Konstruktor dengan sudut statis.
+    private float horizontalSpacing = 0f;
+
+    private BulletMovementPattern bulletMovementPattern;
+
+    private GameObject target;
+    private String spriteKey;
+
     public SpreadShot(
         float speed,
         int numBullets,
         float spreadAngleDegrees
     ) {
-        this(speed, numBullets, spreadAngleDegrees, null);
+        this(
+            speed,
+            numBullets,
+            spreadAngleDegrees,
+            null
+        );
     }
 
-    // Konstruktor dengan target untuk tembakan terarah.
     public SpreadShot(
         float speed,
         int numBullets,
@@ -34,6 +46,65 @@ public class SpreadShot implements ShootingPattern {
         this.target = target;
     }
 
+    public SpreadShot(
+        float speed,
+        int numBullets,
+        float spreadAngleDegrees,
+        int damage,
+        float horizontalSpacing,
+        BulletMovementPattern bulletMovementPattern,
+        GameObject target,
+        String spriteKey
+    ) {
+        this.speed = speed;
+        this.numBullets = numBullets;
+        this.spreadAngleDegrees = spreadAngleDegrees;
+        this.damage = damage;
+        this.horizontalSpacing = horizontalSpacing;
+        this.bulletMovementPattern = bulletMovementPattern;
+        this.target = target;
+        this.spriteKey = spriteKey;
+    }
+
+    public SpreadShot(
+        float speed,
+        int numBullets,
+        float spreadAngleDegrees,
+        int damage,
+        BulletMovementPattern bulletMovementPattern
+    ) {
+        this(
+            speed,
+            numBullets,
+            spreadAngleDegrees,
+            damage,
+            0f,
+            bulletMovementPattern,
+            null,
+            null
+        );
+    }
+
+    public SpreadShot(
+        float speed,
+        int numBullets,
+        float spreadAngleDegrees,
+        int damage,
+        GameObject target,
+        String spriteKey
+    ) {
+        this(
+            speed,
+            numBullets,
+            spreadAngleDegrees,
+            damage,
+            0f,
+            null,
+            target,
+            spriteKey
+        );
+    }
+
     @Override
     public void execute(
         float originX,
@@ -41,7 +112,10 @@ public class SpreadShot implements ShootingPattern {
         BulletManager bulletManager,
         boolean isPlayer
     ) {
-        if (bulletManager == null || numBullets <= 0) {
+        if (
+            bulletManager == null ||
+                numBullets <= 0
+        ) {
             return;
         }
 
@@ -71,35 +145,71 @@ public class SpreadShot implements ShootingPattern {
             ? spreadAngleDegrees / (numBullets - 1)
             : 0f;
 
-        int damage = isPlayer ? 25 : 15;
+        float startX = (
+            horizontalSpacing > 0f &&
+                numBullets > 1
+        )
+            ? originX -
+            ((numBullets - 1) * horizontalSpacing / 2f)
+            : originX;
 
         for (int i = 0; i < numBullets; i++) {
-            float angleDeg = startAngle + i * angleStep;
-            float angleRad = (float) Math.toRadians(angleDeg);
 
-            float vx = (float) (
-                speed * Math.cos(angleRad)
-            );
+            float angleDeg =
+                startAngle + i * angleStep;
 
-            float vy = (float) (
-                speed * Math.sin(angleRad)
-            );
+            float angleRad =
+                (float) Math.toRadians(angleDeg);
+
+            float vx =
+                (float) (speed * Math.cos(angleRad));
+
+            float vy =
+                (float) (speed * Math.sin(angleRad));
+
+            float spawnX = (
+                horizontalSpacing > 0f &&
+                    numBullets > 1
+            )
+                ? startX + i * horizontalSpacing
+                : originX;
+
+            Bullet bullet;
 
             if (isPlayer) {
-                bulletManager.spawnPlayerBullet(
-                    originX,
+                bullet = bulletManager.spawnPlayerBullet(
+                    spawnX,
+                    originY,
+                    vx,
+                    vy,
+                    damage,
+                    spriteKey
+                );
+            } else if (spriteKey != null) {
+                bullet = bulletManager.spawnEnemyBullet(
+                    spawnX,
+                    originY,
+                    vx,
+                    vy,
+                    damage,
+                    spriteKey
+                );
+            } else {
+                bullet = bulletManager.spawnEnemyBullet(
+                    spawnX,
                     originY,
                     vx,
                     vy,
                     damage
                 );
-            } else {
-                bulletManager.spawnEnemyBullet(
-                    originX,
-                    originY,
-                    vx,
-                    vy,
-                    damage
+            }
+
+            if (
+                bullet != null &&
+                    bulletMovementPattern != null
+            ) {
+                bullet.setMovementPattern(
+                    bulletMovementPattern
                 );
             }
         }
@@ -125,8 +235,18 @@ public class SpreadShot implements ShootingPattern {
         return spreadAngleDegrees;
     }
 
-    public void setSpreadAngleDegrees(float spreadAngleDegrees) {
+    public void setSpreadAngleDegrees(
+        float spreadAngleDegrees
+    ) {
         this.spreadAngleDegrees = spreadAngleDegrees;
+    }
+
+    public int getDamage() {
+        return damage;
+    }
+
+    public void setDamage(int damage) {
+        this.damage = damage;
     }
 
     public GameObject getTarget() {
@@ -135,5 +255,33 @@ public class SpreadShot implements ShootingPattern {
 
     public void setTarget(GameObject target) {
         this.target = target;
+    }
+
+    public float getHorizontalSpacing() {
+        return horizontalSpacing;
+    }
+
+    public void setHorizontalSpacing(
+        float horizontalSpacing
+    ) {
+        this.horizontalSpacing = horizontalSpacing;
+    }
+
+    public BulletMovementPattern getBulletMovementPattern() {
+        return bulletMovementPattern;
+    }
+
+    public void setBulletMovementPattern(
+        BulletMovementPattern bulletMovementPattern
+    ) {
+        this.bulletMovementPattern = bulletMovementPattern;
+    }
+
+    public String getSpriteKey() {
+        return spriteKey;
+    }
+
+    public void setSpriteKey(String spriteKey) {
+        this.spriteKey = spriteKey;
     }
 }

@@ -1,4 +1,3 @@
-
 package com.MuhammadDwiYudhaUtama.frontend.objects.patterns;
 
 import com.MuhammadDwiYudhaUtama.frontend.systems.BulletManager;

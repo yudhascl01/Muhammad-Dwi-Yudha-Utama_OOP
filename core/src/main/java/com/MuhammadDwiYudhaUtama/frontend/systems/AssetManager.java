@@ -59,16 +59,9 @@ public class AssetManager {
 
         if (texture != null) {
             TextureRegion[][] grid =
-                TextureRegion.split(
-                    texture,
-                    tileWidth,
-                    tileHeight
-                );
+                TextureRegion.split(texture, tileWidth, tileHeight);
 
-            textureRegionMap.put(
-                key,
-                grid[row][col]
-            );
+            textureRegionMap.put(key, grid[row][col]);
         }
     }
 
@@ -82,14 +75,8 @@ public class AssetManager {
         float frameDuration
     ) {
         registerAnimationFromSheet(
-            key,
-            filename,
-            tileWidth,
-            tileHeight,
-            row,
-            0,
-            numFrames,
-            frameDuration,
+            key, filename, tileWidth, tileHeight,
+            row, 0, numFrames, frameDuration,
             Animation.PlayMode.LOOP
         );
     }
@@ -109,37 +96,21 @@ public class AssetManager {
 
         if (texture != null) {
             TextureRegion[][] grid =
-                TextureRegion.split(
-                    texture,
-                    tileWidth,
-                    tileHeight
-                );
+                TextureRegion.split(texture, tileWidth, tileHeight);
 
-            TextureRegion[] frames =
-                new TextureRegion[numFrames];
+            TextureRegion[] frames = new TextureRegion[numFrames];
 
             for (int i = 0; i < numFrames; i++) {
-                frames[i] =
-                    grid[row][startCol + i];
+                frames[i] = grid[row][startCol + i];
             }
 
             Animation<TextureRegion> animation =
-                new Animation<>(
-                    frameDuration,
-                    frames
-                );
+                new Animation<>(frameDuration, frames);
 
             animation.setPlayMode(playMode);
 
-            animationMap.put(
-                key,
-                animation
-            );
-
-            textureRegionMap.put(
-                key,
-                frames[0]
-            );
+            animationMap.put(key, animation);
+            textureRegionMap.put(key, frames[0]);
         }
     }
 
@@ -155,17 +126,9 @@ public class AssetManager {
         boolean flipY
     ) {
         registerFlippedAnimationFromSheet(
-            key,
-            filename,
-            tileWidth,
-            tileHeight,
-            row,
-            0,
-            numFrames,
-            frameDuration,
-            Animation.PlayMode.LOOP,
-            flipX,
-            flipY
+            key, filename, tileWidth, tileHeight,
+            row, 0, numFrames, frameDuration,
+            Animation.PlayMode.LOOP, flipX, flipY
         );
     }
 
@@ -186,46 +149,25 @@ public class AssetManager {
 
         if (texture != null) {
             TextureRegion[][] grid =
-                TextureRegion.split(
-                    texture,
-                    tileWidth,
-                    tileHeight
-                );
+                TextureRegion.split(texture, tileWidth, tileHeight);
 
-            TextureRegion[] frames =
-                new TextureRegion[numFrames];
+            TextureRegion[] frames = new TextureRegion[numFrames];
 
             for (int i = 0; i < numFrames; i++) {
                 TextureRegion frame =
-                    new TextureRegion(
-                        grid[row][startCol + i]
-                    );
+                    new TextureRegion(grid[row][startCol + i]);
 
-                frame.flip(
-                    flipX,
-                    flipY
-                );
-
+                frame.flip(flipX, flipY);
                 frames[i] = frame;
             }
 
             Animation<TextureRegion> animation =
-                new Animation<>(
-                    frameDuration,
-                    frames
-                );
+                new Animation<>(frameDuration, frames);
 
             animation.setPlayMode(playMode);
 
-            animationMap.put(
-                key,
-                animation
-            );
-
-            textureRegionMap.put(
-                key,
-                frames[0]
-            );
+            animationMap.put(key, animation);
+            textureRegionMap.put(key, frames[0]);
         }
     }
 
@@ -243,162 +185,100 @@ public class AssetManager {
 
     public void init() {
         registerAnimationFromSheet(
-            "player_idle",
-            "player.png",
-            32,
-            48,
-            0,
-            0,
-            8,
-            0.125f,
+            "player_idle", "player.png",
+            32, 48, 0, 0, 8, 0.125f,
             Animation.PlayMode.LOOP
         );
 
         registerAnimationFromSheet(
-            "player_left",
-            "player.png",
-            32,
-            48,
-            1,
-            0,
-            4,
-            0.12f,
+            "player_left", "player.png",
+            32, 48, 1, 0, 4, 0.12f,
             Animation.PlayMode.LOOP
         );
 
         registerAnimationFromSheet(
-            "player_right",
-            "player.png",
-            32,
-            48,
-            2,
-            0,
-            4,
-            0.12f,
+            "player_right", "player.png",
+            32, 48, 2, 0, 4, 0.12f,
             Animation.PlayMode.LOOP
         );
 
         registerAnimationFromSheet(
-            "boss_idle",
-            "rumia.png",
-            64,
-            64,
-            0,
-            0,
-            4,
-            0.2f,
+            "boss_idle", "rumia.png",
+            64, 64, 0, 0, 4, 0.2f,
             Animation.PlayMode.LOOP
         );
 
         registerAnimationFromSheet(
-            "boss_left",
-            "rumia.png",
-            64,
-            64,
-            1,
-            0,
-            4,
-            0.15f,
+            "boss_left", "rumia.png",
+            64, 64, 1, 0, 4, 0.15f,
             Animation.PlayMode.REVERSED
         );
 
         registerAnimationFromSheet(
-            "boss_right",
-            "rumia.png",
-            64,
-            64,
-            2,
-            0,
-            4,
-            0.15f,
+            "boss_right", "rumia.png",
+            64, 64, 2, 0, 4, 0.15f,
             Animation.PlayMode.NORMAL
         );
 
         registerAnimationFromSheet(
-            "fairy_idle_red",
-            "fairy.png",
-            32,
-            32,
-            1,
-            0,
-            8,
-            0.125f,
+            "fairy_idle_red", "fairy.png",
+            32, 32, 1, 0, 8, 0.125f,
             Animation.PlayMode.LOOP
         );
 
         registerAnimationFromSheet(
-            "fairy_idle_blue",
-            "fairy.png",
-            32,
-            32,
-            0,
-            0,
-            8,
-            0.125f,
+            "fairy_idle_blue", "fairy.png",
+            32, 32, 0, 0, 8, 0.125f,
             Animation.PlayMode.LOOP
         );
 
         registerRegionFromSheet(
-            "bullet_amulet",
-            "amulet_reimu.png",
-            16,
-            16,
-            0,
-            0
+            "bullet_amulet", "amulet_reimu.png",
+            16, 16, 0, 0
         );
 
         registerRegionFromSheet(
-            "bullet_amulet_homing",
-            "amulet_reimu.png",
-            16,
-            16,
-            1,
-            0
+            "bullet_amulet_homing", "amulet_reimu.png",
+            16, 16, 1, 0
         );
 
         registerRegionFromSheet(
-            "bullet_danmaku",
-            "bullets_small.png",
-            16,
-            16,
-            2,
-            3
+            "bullet_danmaku", "bullets_small.png",
+            16, 16, 2, 3
+        );
+
+        // TODO (4 poin): Daftarkan variasi warna tekstur peluru Danmaku
+        // (bullets_small.png, ukuran 16x16 per tile)
+
+        registerRegionFromSheet("bullet_danmaku_blue",
+            "bullets_small.png", 16, 16, 2, 3);
+
+        registerRegionFromSheet("bullet_danmaku_red",
+            "bullets_small.png", 16, 16, 2, 6);
+
+        registerRegionFromSheet("bullet_danmaku_purple",
+            "bullets_small.png", 16, 16, 2, 4);
+
+        registerRegionFromSheet("bullet_danmaku_orange",
+            "bullets_small.png", 16, 16, 2, 15);
+
+        registerRegionFromSheet("bullet_danmaku_green",
+            "bullets_small.png", 16, 16, 2, 10);
+
+        registerRegionFromSheet(
+            "item_power", "items.png", 16, 16, 0, 0
         );
 
         registerRegionFromSheet(
-            "item_power",
-            "items.png",
-            16,
-            16,
-            0,
-            0
+            "item_point", "items.png", 16, 16, 0, 1
         );
 
         registerRegionFromSheet(
-            "item_point",
-            "items.png",
-            16,
-            16,
-            0,
-            1
+            "item_bomb", "items.png", 16, 16, 0, 3
         );
 
         registerRegionFromSheet(
-            "item_bomb",
-            "items.png",
-            16,
-            16,
-            0,
-            3
-        );
-
-        registerRegionFromSheet(
-            "item_life",
-            "items.png",
-            16,
-            16,
-            0,
-            5
+            "item_life", "items.png", 16, 16, 0, 5
         );
     }
 

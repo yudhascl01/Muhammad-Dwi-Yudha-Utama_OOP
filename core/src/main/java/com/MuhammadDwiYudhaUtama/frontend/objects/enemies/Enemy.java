@@ -1,12 +1,13 @@
-
 package com.MuhammadDwiYudhaUtama.frontend.objects.enemies;
 
-import com.MuhammadDwiYudhaUtama.frontend.objects.GameObject;
+import com.MuhammadDwiYudhaUtama.frontend.objects.EntityShooter;
 import com.MuhammadDwiYudhaUtama.frontend.objects.Player;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.ShootingPattern;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.entityStrategy.EntityMovementPattern;
 import com.MuhammadDwiYudhaUtama.frontend.systems.AudioSystem;
 import com.badlogic.gdx.graphics.Color;
 
-public class Enemy extends GameObject {
+public class Enemy extends EntityShooter {
 
     private String name;
     private int hp;
@@ -44,13 +45,33 @@ public class Enemy extends GameObject {
         int hp,
         long scoreValue
     ) {
+        super(x, y, width, height, 0, color);
+
+        this.name = name;
+        this.hp = Math.max(0, hp);
+        this.maxHp = Math.max(0, hp);
+        this.scoreValue = scoreValue;
+
+        if (this.hp <= 0) {
+            destroy();
+        }
+    }
+
+    public Enemy(
+        float x,
+        float y,
+        float width,
+        float height,
+        Color color,
+        String name,
+        int hp,
+        long scoreValue,
+        ShootingPattern shootingPattern,
+        EntityMovementPattern movementPattern
+    ) {
         super(
-            x,
-            y,
-            width,
-            height,
-            0,
-            color
+            x, y, width, height, 0, color,
+            shootingPattern, movementPattern
         );
 
         this.name = name;
