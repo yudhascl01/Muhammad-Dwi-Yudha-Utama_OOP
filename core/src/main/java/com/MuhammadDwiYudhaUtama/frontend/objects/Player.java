@@ -10,12 +10,23 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Enemy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.enemies.Fairy;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
+
 import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.ShootingPattern;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.entityStrategy.FixedMovement;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.bulletStrategy.HomingBulletMovement;
+
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.shootingStrategy.FrontShot;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.shootingStrategy.SpreadShot;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.shootingStrategy.SideShot;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.shootingStrategy.CompositeShootingPattern;
+
 import com.MuhammadDwiYudhaUtama.frontend.observers.GameObserver;
+
 import com.MuhammadDwiYudhaUtama.frontend.systems.AssetManager;
 import com.MuhammadDwiYudhaUtama.frontend.systems.AudioSystem;
 import com.MuhammadDwiYudhaUtama.frontend.systems.BulletManager;
 import com.MuhammadDwiYudhaUtama.frontend.systems.EntityFactory;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -35,8 +46,16 @@ public class Player extends EntityShooter {
 
     private int grazeCount = 0;
     private boolean focused = false;
-    private float shootTimer = 0.1f;
-    private float shootCooldown = 0.1f;
+
+    private float shootCooldown = 5f / 60f;
+    private float shootTimer = shootCooldown;
+
+    private float homingCooldown = 30f / 60f;
+    private float homingShootTimer = homingCooldown;
+
+    private ShootingPattern mainShootingPattern;
+    private ShootingPattern sideShootingPattern;
+
     private float invulnerableTimer = 0f;
 
     private int currentDir = 0;
@@ -56,7 +75,7 @@ public class Player extends EntityShooter {
             y,
             32,
             48,
-            250f,
+            240f,
             Color.RED
         );
 
@@ -65,6 +84,10 @@ public class Player extends EntityShooter {
         this.power = power;
         this.spellCards = spellCards;
         this.score = 0L;
+
+        setMovementPattern(new FixedMovement());
+
+        updatePowerStrategy();
     }
 
     public Player(
@@ -81,6 +104,12 @@ public class Player extends EntityShooter {
         super.update(delta);
 
         shootTimer += delta;
+        homingShootTimer += delta;
+
+        if (shootTimer > 0.15f) {
+            shootTimer = shootCooldown;
+            homingShootTimer = homingCooldown;
+        }
 
         if (invulnerableTimer > 0f) {
             invulnerableTimer -= delta;
@@ -169,33 +198,32 @@ public class Player extends EntityShooter {
     // Menembak menggunakan cooldown dan Shooting Pattern
     @Override
     public void shootBullet(BulletManager bulletManager) {
-        if (
-            bulletManager == null ||
-                isDestroyed() ||
-                !active
-        ) {
+        if (bulletManager == null || isDestroyed() || !active) {
             return;
         }
 
         if (shootTimer >= shootCooldown) {
-            float originX = x + width / 2f - 8f;
-            float originY = y + height;
 
-            AudioSystem.getInstance().playBulletShot();
-
-            ShootingPattern pattern = getShootingPattern();
-
-            if (pattern != null) {
-                pattern.execute(
-                    originX,
-                    originY,
+            if (mainShootingPattern != null) {
+                mainShootingPattern.execute(
+                    x + width / 2f - 8f,
+                    y + height,
                     bulletManager,
                     true
                 );
+
+            } else if (shootingPattern != null) {
+                shootingPattern.execute(
+                    x + width / 2f - 8f,
+                    y + height,
+                    bulletManager,
+                    true
+                );
+
             } else {
                 bulletManager.spawnPlayerBullet(
-                    originX,
-                    originY,
+                    x + width / 2f - 8f,
+                    y + height,
                     0f,
                     400f,
                     10 + power
@@ -203,6 +231,20 @@ public class Player extends EntityShooter {
             }
 
             shootTimer = 0f;
+        }
+
+        if (
+            sideShootingPattern != null &&
+                homingShootTimer >= homingCooldown
+        ) {
+            sideShootingPattern.execute(
+                x + width / 2f - 8f,
+                y + height,
+                bulletManager,
+                true
+            );
+
+            homingShootTimer = 0f;
         }
     }
 
@@ -212,19 +254,44 @@ public class Player extends EntityShooter {
         List<GameObject> entities
     ) {
         if (spellCards > 0) {
+
             spellCards--;
-            notifySpellCardsChanged();
 
             invulnerableTimer = 5.0f;
 
+            notifySpellCardsChanged();
+
             if (bulletManager != null) {
+
                 bulletManager.clearEnemyBullets(entities);
+
+                // Cari target musuh aktif untuk dikejar (Boss atau Fairy)
+                GameObject target = null;
+
+                if (entities != null) {
+                    for (GameObject obj : entities) {
+                        if (
+                            obj instanceof Enemy enemy &&
+                                !enemy.isDestroyed()
+                        ) {
+                            target = enemy;
+                            break;
+                        }
+                    }
+                }
+
+                bulletManager.spawnBombOrbs(
+                    x + width / 2f,
+                    y + height / 2f,
+                    target,
+                    entities
+                );
             }
 
             System.out.println(
-                name + " unleashes SPELL CARD (Fantasy Seal)! "
-                    + "All enemy bullets cleared!"
+                name + " unleashes SPELL CARD: Spirit Sign Fantasy Seal (霊符「夢想封印」)! All enemy bullets cleared & 8 homing orbs launched!"
             );
+
         } else {
             System.out.println(
                 "No Spell Cards (Bombs) remaining!"
@@ -298,8 +365,11 @@ public class Player extends EntityShooter {
 
         if (type != null) {
             switch (type) {
+
                 case POWER -> {
                     power += type.getPowerBonus();
+
+                    updatePowerStrategy();
                     notifyPowerChanged();
 
                     addScore((int) item.getScoreValue());
@@ -320,6 +390,7 @@ public class Player extends EntityShooter {
 
                 case BOMB -> {
                     spellCards++;
+
                     notifySpellCardsChanged();
 
                     addScore((int) item.getScoreValue());
@@ -354,6 +425,7 @@ public class Player extends EntityShooter {
         }
 
         AudioSystem.getInstance().playItemPickup();
+
         item.destroy();
     }
 
@@ -404,6 +476,7 @@ public class Player extends EntityShooter {
         List<GameObject> entities
     ) {
         lives--;
+
         notifyLivesChanged();
 
         if (bulletManager != null) {
@@ -411,6 +484,7 @@ public class Player extends EntityShooter {
         }
 
         if (lives > 0) {
+
             if (bulletManager != null) {
                 System.out.println(
                     "[Player] " + name + " lost a life! "
@@ -420,7 +494,9 @@ public class Player extends EntityShooter {
             }
 
             respawn();
+
         } else {
+
             if (bulletManager != null) {
                 System.out.println(
                     "[Player] GAME OVER! " + name
@@ -434,6 +510,7 @@ public class Player extends EntityShooter {
 
     public void respawn() {
         active = true;
+
         x = 200;
         y = 50;
         hp = 100;
@@ -442,6 +519,8 @@ public class Player extends EntityShooter {
 
         power = Math.max(10, power - 16);
         spellCards = 3;
+
+        updatePowerStrategy();
 
         notifyHpChanged();
         notifyPowerChanged();
@@ -457,11 +536,16 @@ public class Player extends EntityShooter {
         grazeCount = 0;
 
         active = true;
+
         x = 200;
         y = 50;
 
         invulnerableTimer = 3.0f;
-        shootTimer = 0.1f;
+
+        shootTimer = shootCooldown;
+        homingShootTimer = homingCooldown;
+
+        updatePowerStrategy();
 
         notifyLivesChanged();
         notifyHpChanged();
@@ -491,6 +575,7 @@ public class Player extends EntityShooter {
     @Override
     public void render(SpriteBatch batch) {
         if (batch != null && active && !isDestroyed()) {
+
             if (invulnerableTimer > 0f) {
                 boolean visible =
                     ((int) (invulnerableTimer * 16)) % 2 == 0;
@@ -515,9 +600,12 @@ public class Player extends EntityShooter {
     // Indikator Core Hitbox
     public void renderFocusIndicator(ShapeRenderer shapeRenderer) {
         if (focused && shapeRenderer != null && active) {
+
             Rectangle core = getCoreHitbox();
 
-            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.begin(
+                ShapeRenderer.ShapeType.Filled
+            );
 
             shapeRenderer.setColor(Color.RED);
 
@@ -585,7 +673,10 @@ public class Player extends EntityShooter {
     }
 
     public void setFocused(boolean focused) {
-        this.focused = focused;
+        if (this.focused != focused) {
+            this.focused = focused;
+            updatePowerStrategy();
+        }
     }
 
     public void setHp(int hp) {
@@ -595,6 +686,9 @@ public class Player extends EntityShooter {
 
     public void setPower(int power) {
         this.power = power;
+
+        updatePowerStrategy();
+
         notifyPowerChanged();
     }
 
@@ -668,5 +762,281 @@ public class Player extends EntityShooter {
         for (GameObserver obs : observers) {
             obs.onGrazeChanged(grazeCount);
         }
+    }
+
+    // TODO (6 poin): Terapkan Dynamic Strategy Swapping pada Player Reimu
+    public void updatePowerStrategy() {
+
+        float spreadAngle = focused ? 4f : 18f;
+        float dualSpreadAngle = focused ? 3f : 12f;
+
+        float sideHOffset = focused ? 8f : 24f;
+        float sideVOffset = focused ? 16f : -16f;
+
+        float leftAngle = focused ? 100f : 120f;
+        float rightAngle = focused ? 80f : 60f;
+
+        float normalSpeed = 720f;
+        float homingSpeed = 500f;
+
+        if (power < 8) {
+
+            // Rank 1 (Power 0 - 7): 1 Tembakan Lurus Tengah
+            mainShootingPattern =
+                new FrontShot(normalSpeed, 48);
+
+            sideShootingPattern = null;
+
+            homingCooldown = 30f / 60f;
+
+        } else if (power < 16) {
+
+            // Rank 2 (Power 8 - 15): 1 Tembakan Lurus + 2 Jimat Sayap Terpandu
+            mainShootingPattern =
+                new FrontShot(normalSpeed, 48);
+
+            sideShootingPattern = new SideShot(
+                homingSpeed,
+                14,
+                sideHOffset,
+                sideVOffset,
+                leftAngle,
+                rightAngle,
+                true,
+                new HomingBulletMovement(360f),
+                "bullet_amulet_homing"
+            );
+
+            homingCooldown = 30f / 60f;
+
+        } else if (power < 32) {
+
+            // Rank 3 (Power 16 - 31): 2 Tembakan Kipas Lurus Rapat + 2 Jimat Sayap Terpandu
+            mainShootingPattern = new SpreadShot(
+                normalSpeed,
+                2,
+                dualSpreadAngle,
+                30,
+                8f,
+                null,
+                null,
+                null
+            );
+
+            sideShootingPattern = new SideShot(
+                homingSpeed,
+                14,
+                sideHOffset,
+                sideVOffset,
+                leftAngle,
+                rightAngle,
+                true,
+                new HomingBulletMovement(360f),
+                "bullet_amulet_homing"
+            );
+
+            homingCooldown = 30f / 60f;
+
+        } else if (power < 48) {
+
+            // Rank 4 (Power 32 - 47): 3 Tembakan Kipas Menyebar + 2 Jimat Sayap Terpandu
+            mainShootingPattern = new SpreadShot(
+                normalSpeed,
+                3,
+                spreadAngle,
+                26
+            );
+
+            sideShootingPattern = new SideShot(
+                homingSpeed,
+                14,
+                sideHOffset,
+                sideVOffset,
+                leftAngle,
+                rightAngle,
+                true,
+                new HomingBulletMovement(360f),
+                "bullet_amulet_homing"
+            );
+
+            homingCooldown = 30f / 60f;
+
+        } else if (power < 64) {
+
+            // Rank 5 (Power 48 - 63): 3 Tembakan Kipas + Jimat Terpandu
+            mainShootingPattern = new SpreadShot(
+                normalSpeed,
+                3,
+                spreadAngle,
+                26
+            );
+
+            sideShootingPattern = new SideShot(
+                homingSpeed,
+                12,
+                sideHOffset,
+                sideVOffset,
+                leftAngle,
+                rightAngle,
+                true,
+                new HomingBulletMovement(360f),
+                "bullet_amulet_homing"
+            );
+
+            homingCooldown = 15f / 60f;
+
+        } else if (power < 80) {
+
+            // Rank 6 (Power 64 - 79): 3 Tembakan Kipas + 4 Jimat Terpandu
+            mainShootingPattern = new SpreadShot(
+                normalSpeed,
+                3,
+                spreadAngle,
+                26
+            );
+
+            sideShootingPattern = new CompositeShootingPattern(
+                new SideShot(
+                    homingSpeed,
+                    9,
+                    sideHOffset,
+                    sideVOffset,
+                    leftAngle,
+                    rightAngle,
+                    true,
+                    new HomingBulletMovement(360f),
+                    "bullet_amulet_homing"
+                ),
+                new SideShot(
+                    homingSpeed,
+                    12,
+                    sideHOffset + 4f,
+                    sideVOffset,
+                    leftAngle + 30f,
+                    rightAngle - 30f,
+                    true,
+                    new HomingBulletMovement(360f),
+                    "bullet_amulet_homing"
+                )
+            );
+
+            homingCooldown = 15f / 60f;
+
+        } else if (power < 128) {
+
+            // Rank 7 & 8 (Power 80 - 127): 3 Tembakan Kipas + 4 Jimat Terpandu Sudut Rapat
+            mainShootingPattern = new SpreadShot(
+                normalSpeed,
+                3,
+                spreadAngle,
+                26
+            );
+
+            sideShootingPattern = new CompositeShootingPattern(
+                new SideShot(
+                    homingSpeed,
+                    8,
+                    sideHOffset,
+                    sideVOffset,
+                    leftAngle - 10f,
+                    rightAngle + 10f,
+                    true,
+                    new HomingBulletMovement(360f),
+                    "bullet_amulet_homing"
+                ),
+                new SideShot(
+                    homingSpeed,
+                    8,
+                    sideHOffset + 4f,
+                    sideVOffset,
+                    leftAngle + 10f,
+                    rightAngle - 10f,
+                    true,
+                    new HomingBulletMovement(360f),
+                    "bullet_amulet_homing"
+                )
+            );
+
+            homingCooldown = 15f / 60f;
+
+        } else {
+
+            // Rank 9 (Power 128 MAX): 4 Tembakan Kipas Berjarak + 6 Jimat Terpandu Maksimal
+            mainShootingPattern = new SpreadShot(
+                normalSpeed,
+                4,
+                spreadAngle * 1.2f,
+                24,
+                16f,
+                null,
+                null,
+                null
+            );
+
+            sideShootingPattern = new CompositeShootingPattern(
+                new SideShot(
+                    homingSpeed,
+                    8,
+                    sideHOffset,
+                    sideVOffset,
+                    leftAngle - 10f,
+                    rightAngle + 10f,
+                    true,
+                    new HomingBulletMovement(360f),
+                    "bullet_amulet_homing"
+                ),
+                new SideShot(
+                    homingSpeed,
+                    8,
+                    sideHOffset + 4f,
+                    sideVOffset,
+                    leftAngle + 10f,
+                    rightAngle - 10f,
+                    true,
+                    new HomingBulletMovement(360f),
+                    "bullet_amulet_homing"
+                ),
+                new SideShot(
+                    homingSpeed,
+                    8,
+                    sideHOffset + 8f,
+                    sideVOffset,
+                    leftAngle + 30f,
+                    rightAngle - 30f,
+                    true,
+                    new HomingBulletMovement(360f),
+                    "bullet_amulet_homing"
+                )
+            );
+
+            homingCooldown = 15f / 60f;
+        }
+
+        if (sideShootingPattern != null) {
+            setShootingPattern(
+                new CompositeShootingPattern(
+                    mainShootingPattern,
+                    sideShootingPattern
+                )
+            );
+        } else {
+            setShootingPattern(mainShootingPattern);
+        }
+    }
+
+    public ShootingPattern getMainShootingPattern() {
+        return mainShootingPattern;
+    }
+
+    public ShootingPattern getSideShootingPattern() {
+        return sideShootingPattern;
+    }
+
+    public float getShootCooldown() {
+        return shootCooldown;
+    }
+
+    public float getHomingCooldown() {
+        return homingCooldown;
     }
 }

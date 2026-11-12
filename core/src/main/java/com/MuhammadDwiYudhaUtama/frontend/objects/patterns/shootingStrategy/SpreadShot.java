@@ -30,7 +30,7 @@ public class SpreadShot implements ShootingPattern {
             speed,
             numBullets,
             spreadAngleDegrees,
-            null
+            (GameObject) null
         );
     }
 
@@ -44,6 +44,24 @@ public class SpreadShot implements ShootingPattern {
         this.numBullets = numBullets;
         this.spreadAngleDegrees = spreadAngleDegrees;
         this.target = target;
+    }
+
+    public SpreadShot(
+        float speed,
+        int numBullets,
+        float spreadAngleDegrees,
+        int damage
+    ) {
+        this(
+            speed,
+            numBullets,
+            spreadAngleDegrees,
+            damage,
+            0f,
+            null,
+            null,
+            null
+        );
     }
 
     public SpreadShot(
@@ -112,10 +130,7 @@ public class SpreadShot implements ShootingPattern {
         BulletManager bulletManager,
         boolean isPlayer
     ) {
-        if (
-            bulletManager == null ||
-                numBullets <= 0
-        ) {
+        if (bulletManager == null || numBullets <= 0) {
             return;
         }
 
@@ -155,17 +170,11 @@ public class SpreadShot implements ShootingPattern {
 
         for (int i = 0; i < numBullets; i++) {
 
-            float angleDeg =
-                startAngle + i * angleStep;
+            float angleDeg = startAngle + i * angleStep;
+            float angleRad = (float) Math.toRadians(angleDeg);
 
-            float angleRad =
-                (float) Math.toRadians(angleDeg);
-
-            float vx =
-                (float) (speed * Math.cos(angleRad));
-
-            float vy =
-                (float) (speed * Math.sin(angleRad));
+            float vx = (float) (speed * Math.cos(angleRad));
+            float vy = (float) (speed * Math.sin(angleRad));
 
             float spawnX = (
                 horizontalSpacing > 0f &&
@@ -204,10 +213,7 @@ public class SpreadShot implements ShootingPattern {
                 );
             }
 
-            if (
-                bullet != null &&
-                    bulletMovementPattern != null
-            ) {
+            if (bullet != null && bulletMovementPattern != null) {
                 bullet.setMovementPattern(
                     bulletMovementPattern
                 );
@@ -235,9 +241,7 @@ public class SpreadShot implements ShootingPattern {
         return spreadAngleDegrees;
     }
 
-    public void setSpreadAngleDegrees(
-        float spreadAngleDegrees
-    ) {
+    public void setSpreadAngleDegrees(float spreadAngleDegrees) {
         this.spreadAngleDegrees = spreadAngleDegrees;
     }
 
@@ -261,9 +265,7 @@ public class SpreadShot implements ShootingPattern {
         return horizontalSpacing;
     }
 
-    public void setHorizontalSpacing(
-        float horizontalSpacing
-    ) {
+    public void setHorizontalSpacing(float horizontalSpacing) {
         this.horizontalSpacing = horizontalSpacing;
     }
 

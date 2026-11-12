@@ -1,3 +1,4 @@
+
 package com.MuhammadDwiYudhaUtama.frontend;
 
 import java.util.ArrayList;
@@ -30,6 +31,12 @@ import com.MuhammadDwiYudhaUtama.frontend.systems.EntityFactory;
 
 import com.MuhammadDwiYudhaUtama.frontend.ui.GameHUD;
 
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.entityStrategy.TargetPointMovement;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.entityStrategy.SCurveMovement;
+
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.shootingStrategy.SpreadShot;
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.shootingStrategy.AlternatingRingShot;
+
 public class Main extends ApplicationAdapter {
 
     private SpriteBatch batch;
@@ -44,12 +51,16 @@ public class Main extends ApplicationAdapter {
     private List<GameObject> entities;
 
     private BulletManager bulletManager;
-
     private CollisionReferee collisionReferee;
-
     private InputHandler inputHandler;
-
     private GameHUD gameHUD;
+
+    private float waveTimer = 0f;
+    private int wave1SpawnIndex = 0;
+    private float enemyShootTimer = 0f;
+    private float phaseTimer = 0f;
+
+    private int currentPhase = 0;
 
     // =====================================
     // CREATE
@@ -83,31 +94,10 @@ public class Main extends ApplicationAdapter {
             3
         );
 
-        // RED FAIRY
-        fairy.add(
-            EntityFactory.createFairy(
-                150,
-                380,
-                "Red Fairy",
-                20
-            )
-        );
-
-        // BLUE FAIRY
-        fairy.add(
-            EntityFactory.createFairy(
-                250,
-                380,
-                "Blue Fairy",
-                20,
-                "fairy_idle_blue"
-            )
-        );
-
         // BOSS
         boss = EntityFactory.createBoss(
-            250,
-            400,
+            200,
+            420,
             "Rumia",
             150
         );
@@ -128,13 +118,32 @@ public class Main extends ApplicationAdapter {
 
         // REGISTER ENTITIES
         entities.add(player);
-        entities.addAll(fairy);
         entities.add(boss);
         entities.add(powerItem);
         entities.add(pointItem);
 
         // SYSTEMS
         bulletManager = new BulletManager();
+        bulletManager.setEntities(entities);
+
+        boss.setMovementPattern(
+            new TargetPointMovement(
+                200f,
+                420f,
+                150f
+            )
+        );
+
+        boss.setShootingPattern(
+            new SpreadShot(
+                220f,
+                5,
+                25f,
+                10,
+                player,
+                "bullet_danmaku_red"
+            )
+        );
 
         collisionReferee = new CollisionReferee();
 
@@ -155,44 +164,65 @@ public class Main extends ApplicationAdapter {
 
         System.out.println("[Main] Restarting game...");
 
+        // Bersihkan seluruh entitas lama.
         entities.clear();
-
-        bulletManager.clearEnemyBullets();
-
-        bulletManager.clearPlayerBullets();
-
-        player.resetGame();
-
-        entities.add(player);
-
         fairy.clear();
 
-        fairy.add(
-            EntityFactory.createFairy(
-                150,
-                380,
-                "Red Fairy",
-                20
-            )
+        // Bersihkan seluruh peluru.
+        bulletManager.clearEnemyBullets();
+        bulletManager.clearPlayerBullets();
+
+        // Reset wave.
+        resetFairyWave();
+
+        // Reset timer dan fase.
+        enemyShootTimer = 0f;
+        phaseTimer = 0f;
+        currentPhase = 0;
+
+        // Buat Player baru.
+        player = EntityFactory.createPlayer(
+            200,
+            50,
+            "Reimu Hakurei",
+            100,
+            15,
+            3
         );
 
-        fairy.add(
-            EntityFactory.createFairy(
-                250,
-                380,
-                "Blue Fairy",
-                20,
-                "fairy_idle_blue"
-            )
-        );
+        // Hubungkan Player baru dengan HUD.
+        player.registerObserver(gameHUD);
 
+        // Buat Boss baru.
         boss = EntityFactory.createBoss(
-            250,
-            400,
+            200,
+            420,
             "Rumia",
             150
         );
 
+        // Atur pola pergerakan Boss.
+        boss.setMovementPattern(
+            new TargetPointMovement(
+                200f,
+                420f,
+                150f
+            )
+        );
+
+        // Atur pola tembakan Boss.
+        boss.setShootingPattern(
+            new SpreadShot(
+                220f,
+                5,
+                25f,
+                10,
+                player,
+                "bullet_danmaku_red"
+            )
+        );
+
+        // Buat ulang item.
         powerItem = EntityFactory.createItem(
             180,
             450,
@@ -205,12 +235,17 @@ public class Main extends ApplicationAdapter {
             ItemType.POINT
         );
 
-        entities.addAll(fairy);
+        // Daftarkan seluruh entitas baru.
+        entities.add(player);
         entities.add(boss);
         entities.add(powerItem);
         entities.add(pointItem);
 
+        // Perbarui referensi entitas pada sistem.
         inputHandler.setEntities(entities);
+        bulletManager.setEntities(entities);
+
+        System.out.println("[Main] Game restarted successfully!");
     }
 
     // =====================================
@@ -223,15 +258,19 @@ public class Main extends ApplicationAdapter {
         float delta = Gdx.graphics.getDeltaTime();
 
         // =====================================
-        // 0. RESTART GAME
+        // 0. RESTART INPUT
         // =====================================
 
         if (
             Gdx.input != null
                 && Gdx.input.isKeyJustPressed(Input.Keys.R)
-                && player.isGameOver()
         ) {
+
             restartGame();
+
+            // Hentikan frame saat ini.
+            // Gameplay akan dilanjutkan pada frame berikutnya.
+            return;
         }
 
         // =====================================
@@ -267,14 +306,7 @@ public class Main extends ApplicationAdapter {
         // 3. BOSS ATTACK
         // =====================================
 
-        if (boss != null && !boss.isDestroyed()) {
-
-            boss.updateAttack(
-                delta,
-                bulletManager,
-                player
-            );
-        }
+        updateEnemyScheduler(delta);
 
         // =====================================
         // 4. UPDATE BULLETS
@@ -326,10 +358,10 @@ public class Main extends ApplicationAdapter {
             }
         }
 
-        // Player bullets dan enemy bullets
+        // Render peluru.
         bulletManager.render(batch);
 
-        // Sidebar
+        // Render HUD.
         gameHUD.render(batch);
 
         batch.end();
@@ -403,5 +435,149 @@ public class Main extends ApplicationAdapter {
         AudioSystem.getInstance().dispose();
 
         AssetManager.getInstance().dispose();
+    }
+
+    // =====================================
+    // FAIRY WAVE
+    // =====================================
+
+    private void updateFairyWave(float delta) {
+
+        float[] spawnX = {
+            60f,
+            68f,
+            76f,
+            84f,
+            92f
+        };
+
+        waveTimer += delta;
+
+        if (
+            wave1SpawnIndex < spawnX.length
+                && waveTimer >= 1.0f + wave1SpawnIndex * 0.267f
+        ) {
+
+            float x = spawnX[wave1SpawnIndex++];
+
+            Fairy f = EntityFactory.createFairy(
+                x,
+                480f,
+                "Left S-Curve Fairy",
+                8,
+                "fairy_idle_blue"
+            );
+
+            f.setMovementPattern(
+                new SCurveMovement(
+                    130f,
+                    (float) Math.toRadians(270),
+                    false
+                )
+            );
+
+            f.setShootingPattern(null);
+
+            fairy.add(f);
+            entities.add(f);
+        }
+    }
+
+    private void resetFairyWave() {
+
+        waveTimer = 0f;
+        wave1SpawnIndex = 0;
+    }
+
+    // =====================================
+    // ENEMY SCHEDULER
+    // =====================================
+
+    private void updateEnemyScheduler(float delta) {
+
+        // Perbarui wave peri.
+        updateFairyWave(delta);
+
+        fairy.removeIf(
+            f -> f.isDestroyed() || f.isOffScreen(416, 560)
+        );
+
+        // Tembakan berkala Boss.
+        enemyShootTimer += delta;
+
+        if (
+            enemyShootTimer >= 1.5f
+                && boss != null
+                && !boss.isDestroyed()
+        ) {
+
+            boss.shootBullet(bulletManager);
+
+            enemyShootTimer = 0f;
+        }
+
+        // Dynamic Strategy Swapping.
+        phaseTimer += delta;
+
+        if (
+            phaseTimer >= 4.0f
+                && boss != null
+                && !boss.isDestroyed()
+        ) {
+
+            phaseTimer = 0f;
+
+            currentPhase = (currentPhase + 1) % 2;
+
+            if (currentPhase == 0) {
+
+                // Fase 1: Kiri Atas dan Aimed SpreadShot.
+                boss.setMovementPattern(
+                    new TargetPointMovement(
+                        120f,
+                        420f,
+                        150f
+                    )
+                );
+
+                boss.setShootingPattern(
+                    new SpreadShot(
+                        220f,
+                        5,
+                        25f,
+                        10,
+                        player,
+                        "bullet_danmaku_red"
+                    )
+                );
+
+                System.out.println(
+                    "[Boss Strategy] Rumia shifted to Upper Left with Aimed SpreadShot!"
+                );
+
+            } else {
+
+                // Fase 2: Kanan Atas dan Alternating Ring Shot.
+                boss.setMovementPattern(
+                    new TargetPointMovement(
+                        280f,
+                        420f,
+                        150f
+                    )
+                );
+
+                boss.setShootingPattern(
+                    new AlternatingRingShot(
+                        180f,
+                        16,
+                        10
+                    )
+                );
+
+                System.out.println(
+                    "[Boss Strategy] Rumia shifted to Upper Right with AlternatingRingShot!"
+                );
+            }
+        }
     }
 }

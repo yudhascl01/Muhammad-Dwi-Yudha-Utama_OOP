@@ -1,4 +1,3 @@
-
 package com.MuhammadDwiYudhaUtama.frontend.objects.bullets;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.BulletType;
@@ -18,7 +17,6 @@ public class Bullet extends GameObject {
     private float vx;
     private float vy;
     private float angle = 90f;
-    private float stateTime = 0f;
 
     private boolean isPlayerBullet;
     private boolean grazed;
@@ -87,10 +85,9 @@ public class Bullet extends GameObject {
 
         this.active = true;
         this.grazed = false;
-        this.stateTime = 0f;
-        this.movementPattern = null;
 
-        setAnimation(getAnimation());
+        this.setStateTime(0f);
+        this.movementPattern = null;
     }
 
     @Override
@@ -100,8 +97,6 @@ public class Bullet extends GameObject {
         if (!active) {
             return;
         }
-
-        stateTime += delta;
 
         if (movementPattern != null) {
             movementPattern.move(this, delta);
@@ -183,10 +178,6 @@ public class Bullet extends GameObject {
 
     public void setAngle(float angle) {
         this.angle = angle;
-    }
-
-    public float getStateTime() {
-        return stateTime;
     }
 
     public boolean hasBeenGrazed() {

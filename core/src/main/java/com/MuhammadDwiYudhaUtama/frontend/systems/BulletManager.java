@@ -1,4 +1,3 @@
-
 package com.MuhammadDwiYudhaUtama.frontend.systems;
 
 import java.util.ArrayList;
@@ -8,32 +7,80 @@ import java.util.List;
 import java.util.Queue;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import com.MuhammadDwiYudhaUtama.frontend.objects.BulletType;
 import com.MuhammadDwiYudhaUtama.frontend.objects.GameObject;
 import com.MuhammadDwiYudhaUtama.frontend.objects.bullets.Bullet;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.Item;
 import com.MuhammadDwiYudhaUtama.frontend.objects.items.ItemType;
+
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.bulletStrategy.FantasySealMovement;
 import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.bulletStrategy.HomingBulletMovement;
 
+import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.shootingStrategy.RingShot;
 
 public class BulletManager {
 
-
-    private List<GameObject> entities; // [TAMBAHAN] Tambahkan field untuk menampung daftar entitas arena
-
-    private final Queue<Bullet> playerBulletPool =
+    private Queue<Bullet> playerBulletPool =
         new LinkedList<>();
 
-    private final Queue<Bullet> enemyBulletPool =
+    private Queue<Bullet> enemyBulletPool =
         new LinkedList<>();
 
-    private final List<Bullet> activePlayerBullets =
+    private List<Bullet> activePlayerBullets =
         new ArrayList<>();
 
-    private final List<Bullet> activeEnemyBullets =
+    private List<Bullet> activeEnemyBullets =
         new ArrayList<>();
+
+    private List<GameObject> entities;
+
+    public Bullet spawnPlayerBullet(
+        float x,
+        float y,
+        float vx,
+        float vy,
+        int damage,
+        String spriteKey
+    ) {
+        String key = spriteKey != null
+            ? spriteKey
+            : "bullet_amulet";
+
+        Bullet bullet;
+
+        if (!playerBulletPool.isEmpty()) {
+            bullet = playerBulletPool.poll();
+
+            bullet.init(
+                x, y, vx, vy,
+                BulletType.AMULET,
+                damage,
+                true
+            );
+
+            bullet.setSprite(
+                AssetManager.getInstance()
+                    .getTextureRegion(key)
+            );
+
+        } else {
+            bullet = EntityFactory.createPlayerBullet(
+                x, y, damage, key
+            );
+
+            bullet.init(
+                x, y, vx, vy,
+                BulletType.AMULET,
+                damage,
+                true
+            );
+        }
+
+        activePlayerBullets.add(bullet);
+
+        return bullet;
+    }
 
     public Bullet spawnPlayerBullet(
         float x,
@@ -42,108 +89,116 @@ public class BulletManager {
         float vy,
         int damage
     ) {
-        Bullet bullet = playerBulletPool.poll();
+        return spawnPlayerBullet(
+            x, y, vx, vy, damage, "bullet_amulet"
+        );
+    }
 
-        if (bullet == null) {
-            bullet = EntityFactory.createPlayerBullet(
-                x, y, damage
+    public Bullet spawnEnemyBullet(
+        float x,
+        float y,
+        float vx,
+        float vy,
+        int damage,
+        String spriteKey
+    ) {
+        String key = spriteKey != null
+            ? spriteKey
+            : "bullet_danmaku";
+
+        Bullet bullet;
+
+        if (!enemyBulletPool.isEmpty()) {
+            bullet = enemyBulletPool.poll();
+
+            bullet.init(
+                x, y, vx, vy,
+                BulletType.DANMAKU,
+                damage,
+                false
+            );
+
+            bullet.setSprite(
+                AssetManager.getInstance()
+                    .getTextureRegion(key)
+            );
+
+        } else {
+            bullet = EntityFactory.createEnemyBullet(
+                x, y, damage, key
+            );
+
+            bullet.init(
+                x, y, vx, vy,
+                BulletType.DANMAKU,
+                damage,
+                false
             );
         }
 
-        bullet.init(
-            x, y, vx, vy,
-            BulletType.AMULET,
-            damage,
+        activeEnemyBullets.add(bullet);
+
+        return bullet;
+    }
+
+    public Bullet spawnEnemyBullet(
+        float x,
+        float y,
+        float vx,
+        float vy,
+        int damage
+    ) {
+        return spawnEnemyBullet(
+            x, y, vx, vy, damage, "bullet_danmaku"
+        );
+    }
+
+    // Strategy Composition: Fantasy Seal.
+    public void spawnBombOrbs(
+        float originX,
+        float originY,
+        GameObject targetEnemy,
+        List<GameObject> entities
+    ) {
+        int orbCount = 8;
+        int orbDamage = 35;
+
+        List<GameObject> targetEntities =
+            entities != null ? entities : this.entities;
+
+        RingShot bombPattern = new RingShot(
+            150f,
+            orbCount,
+            orbDamage,
+            new FantasySealMovement(
+                targetEnemy,
+                targetEntities
+            )
+        );
+
+        bombPattern.execute(
+            originX,
+            originY,
+            this,
             true
         );
 
-        applyBulletSprite(
-            bullet,
-            null,
-            "bullet_amulet"
+        System.out.println(
+            "[BulletManager] Spawned 8 Bomb Spirit Orbs via RingShot composed with FantasySealMovement!"
         );
-
-        activePlayerBullets.add(bullet);
-
-        return bullet;
     }
 
-    public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage, String spriteKey) { // Tambahin String spriteKey sebagai parameter
-        String key = (spriteKey != null) ? spriteKey : "bullet_amulet"; // Tambahkan variabel String lokal key
-        Bullet bullet;
-        if (!playerBulletPool.isEmpty()) {
-            bullet = playerBulletPool.poll();
-            bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
-            bullet.setSprite(AssetManager.getInstance().getTextureRegion(key)); // Tambahkan setSprite menggunakan key
-        } else {
-            bullet = EntityFactory.createPlayerBullet(x, y, damage, key); // Tambahkan key sebagai argumen ke-4
-            bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
-        }
-        activePlayerBullets.add(bullet);
-        return bullet;
-    }
-
-    public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage) {
-        return spawnPlayerBullet(x, y, vx, vy, damage, "bullet_amulet");
-    }
-
-    // [UBAH] Perbarui method spawnEnemyBullet bawaan Modul 8 dengan perubahan berikut:
-    public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage, String spriteKey) { // Tambahin String spriteKey sebagai parameter
-        String key = (spriteKey != null) ? spriteKey : "bullet_danmaku"; // Tambahkan variabel String lokal key
-        Bullet bullet;
-        if (!enemyBulletPool.isEmpty()) {
-            bullet = enemyBulletPool.poll();
-            bullet.init(x, y, vx, vy, BulletType.DANMAKU, damage, false);
-            bullet.setSprite(AssetManager.getInstance().getTextureRegion(key)); // Tambahkan setSprite menggunakan key
-        } else {
-            bullet = EntityFactory.createEnemyBullet(x, y, damage, key); // Tambahkan key sebagai argumen ke-4
-            bullet.init(x, y, vx, vy, BulletType.DANMAKU, damage, false);
-        }
-        activeEnemyBullets.add(bullet);
-        return bullet;
-    }
-
-    // [TAMBAHAN] Tambahkan method overload 5 parameter berikut (mendelegasikan ke method 6 parameter di atas):
-    public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage) {
-        return spawnEnemyBullet(x, y, vx, vy, damage, "bullet_danmaku");
-    }
-
-    private void applyBulletSprite(
-        Bullet bullet,
-        String spriteKey,
-        String defaultSpriteKey
+    public void spawnBombOrbs(
+        float originX,
+        float originY,
+        GameObject targetEnemy
     ) {
-        if (bullet == null) {
-            return;
-        }
-
-        String key = spriteKey != null
-            ? spriteKey
-            : defaultSpriteKey;
-
-        TextureRegion sprite =
-            AssetManager.getInstance()
-                .getTextureRegion(key);
-
-        if (sprite != null) {
-            bullet.setSprite(sprite);
-        }
-    }
-
-    public void update(float delta, float screenWidth, float screenHeight) {
-        Iterator<Bullet> pIter = activePlayerBullets.iterator();
-        while (pIter.hasNext()) {
-            Bullet bullet = pIter.next();
-
-            // [TAMBAHAN] Sisipkan pengecekan ini tepat sebelum bullet.update(delta):
-            if (entities != null && bullet.getMovementPattern() instanceof HomingBulletMovement homing && homing.getEntities() == null) {
-                homing.setEntities(entities);
-            }
-
-            bullet.update(delta);
-            ...
-        }
-        ...
+        spawnBombOrbs(
+            originX,
+            originY,
+            targetEnemy,
+            null
+        );
     }
 
     public void update(
@@ -181,16 +236,25 @@ public class BulletManager {
         while (iterator.hasNext()) {
             Bullet bullet = iterator.next();
 
+            if (
+                entities != null
+                    && bullet.getMovementPattern()
+                    instanceof HomingBulletMovement homing
+                    && homing.getEntities() == null
+            ) {
+                homing.setEntities(entities);
+            }
+
             if (!bullet.isDestroyed()) {
                 bullet.update(delta);
             }
 
             if (
-                bullet.isDestroyed() ||
-                    bullet.isOffScreen(
-                        screenWidth,
-                        screenHeight
-                    )
+                bullet.isDestroyed()
+                    || bullet.isOffScreen(
+                    screenWidth,
+                    screenHeight
+                )
             ) {
                 bullet.destroy();
                 iterator.remove();
@@ -303,7 +367,11 @@ public class BulletManager {
         return enemyBulletPool.size();
     }
 
-    public List<GameObject> getEntities() { return entities; }
-    public void setEntities(List<GameObject> entities) { this.entities = entities; }
-}
+    public List<GameObject> getEntities() {
+        return entities;
+    }
 
+    public void setEntities(List<GameObject> entities) {
+        this.entities = entities;
+    }
+}

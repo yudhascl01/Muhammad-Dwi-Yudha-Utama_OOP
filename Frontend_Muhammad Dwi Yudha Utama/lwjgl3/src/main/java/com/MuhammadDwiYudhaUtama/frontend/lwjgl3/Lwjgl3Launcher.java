@@ -41,6 +41,7 @@ public class Lwjgl3Launcher {
                 .refreshRate + 1
         );
 
+        // Ukuran jendela disesuaikan dengan area permainan dan HUD.
         configuration.setWindowedMode(800, 600);
 
         configuration.setWindowIcon(
