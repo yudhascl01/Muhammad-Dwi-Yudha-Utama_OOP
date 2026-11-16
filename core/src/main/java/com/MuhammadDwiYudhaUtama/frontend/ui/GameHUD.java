@@ -3,12 +3,19 @@ package com.MuhammadDwiYudhaUtama.frontend.ui;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import com.MuhammadDwiYudhaUtama.frontend.network.ScoreEntry;
 import com.MuhammadDwiYudhaUtama.frontend.observers.GameObserver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GameHUD implements GameObserver {
+
+    private static final float PLAYFIELD_CENTER_X = 32f + 384f / 2f;
 
     private long score;
     private int hp;
@@ -17,8 +24,14 @@ public class GameHUD implements GameObserver {
     private int grazeCount;
     private int lives = 3;
 
+    private boolean stageClear = false;
+    private String scoreboardStatus = null;
+
+    private final List<String> leaderboardLines = new ArrayList<>();
+
     private BitmapFont font;
     private ShapeRenderer shapeRenderer;
+    private GlyphLayout glyphLayout;
 
     public GameHUD() {
         // Diinisialisasi secara lazy saat rendering.
@@ -63,23 +76,19 @@ public class GameHUD implements GameObserver {
                 shapeRenderer = new ShapeRenderer();
             }
 
-            shapeRenderer.begin(
-                ShapeRenderer.ShapeType.Line
-            );
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 
             shapeRenderer.setColor(Color.LIGHT_GRAY);
 
-            // Batas Playfield
-            shapeRenderer.rect(
-                32, 16, 384, 544
-            );
+            // Playfield boundary box: X: 32..416, Y: 16..464
+            shapeRenderer.rect(32, 16, 384, 448);
 
-            // Batas Sidebar
+            // Sidebar boundary box
+            float sidebarWidth =
+                (Gdx.graphics.getWidth() == 640) ? 192 : 336;
+
             shapeRenderer.setColor(Color.DARK_GRAY);
-
-            shapeRenderer.rect(
-                432, 16, 336, 544
-            );
+            shapeRenderer.rect(432, 16, sidebarWidth, 448);
 
             shapeRenderer.end();
         }
@@ -96,107 +105,131 @@ public class GameHUD implements GameObserver {
 
             if (font != null) {
 
-                font.draw(
-                    batch,
-                    "=== TOUHOU PRACTICUM ===",
-                    448,
-                    540
-                );
+                if (glyphLayout == null) {
+                    glyphLayout = new GlyphLayout();
+                }
+
+                font.draw(batch, "=== TOUHOU PRACTICUM ===", 448, 445);
 
                 font.draw(
                     batch,
-                    "HighScore: "
-                        + String.format(
+                    "HighScore: " + String.format(
                         "%09d",
                         Math.max(score, 999990L)
                     ),
-                    448,
-                    500
+                    448, 415
                 );
 
                 font.draw(
                     batch,
-                    "Score:     "
-                        + String.format("%09d", score),
-                    448,
-                    470
+                    "Score:     " + String.format("%09d", score),
+                    448, 385
                 );
 
                 font.draw(
                     batch,
-                    "Player:     "
-                        + (lives > 0
-                        ? "★ ".repeat(lives)
-                        : "GAME OVER (Press R)"),
-                    448,
-                    430
+                    "Player:     " + (
+                        lives > 0 ? "★ ".repeat(lives) : "GAME OVER"
+                    ),
+                    448, 355
                 );
 
                 font.draw(
                     batch,
-                    "SpellCards: "
-                        + "★ ".repeat(Math.max(0, spellCards)),
-                    448,
-                    390
+                    "SpellCards: " + "★ ".repeat(Math.max(0, spellCards)),
+                    448, 325
                 );
 
-                font.draw(
-                    batch,
-                    "Power:     " + power + " / 128",
-                    448,
-                    350
-                );
+                font.draw(batch, "Power:     " + power + " / 128", 448, 295);
+                font.draw(batch, "Graze:     " + grazeCount, 448, 265);
 
-                font.draw(
-                    batch,
-                    "Graze:     " + grazeCount,
-                    448,
-                    310
-                );
+                font.draw(batch, "--- CONTROLS ---", 448, 215);
+                font.draw(batch, "Arrow / WASD : Move", 448, 185);
+                font.draw(batch, "Shift        : Focus Mode", 448, 155);
+                font.draw(batch, "Z / J        : Shoot", 448, 125);
+                font.draw(batch, "X / K        : SpellCard (Bomb)", 448, 95);
+                font.draw(batch, "R            : Restart (Clear/Over)", 448, 65);
 
-                font.draw(
-                    batch,
-                    "--- CONTROLS ---",
-                    448,
-                    230
-                );
-
-                font.draw(
-                    batch,
-                    "Arrow / WASD : Move",
-                    448,
-                    200
-                );
-
-                font.draw(
-                    batch,
-                    "Shift        : Focus Mode",
-                    448,
-                    170
-                );
-
-                font.draw(
-                    batch,
-                    "Z            : Shoot",
-                    448,
-                    140
-                );
-
-                font.draw(
-                    batch,
-                    "X            : SpellCard (Bomb)",
-                    448,
-                    110
-                );
-
-                font.draw(
-                    batch,
-                    "R            : Restart (on Game Over)",
-                    448,
-                    80
-                );
+                if (stageClear || lives <= 0) {
+                    renderRunEndLeaderboard(batch);
+                }
             }
         }
+    }
+
+    // Menampilkan leaderboard ketika permainan selesai
+    private void renderRunEndLeaderboard(SpriteBatch batch) {
+        font.setColor(stageClear ? Color.GOLD : Color.SALMON);
+
+        drawCenteredOnPlayfield(
+            batch,
+            stageClear ? "=== STAGE 1 CLEAR! ===" : "=== GAME OVER ===",
+            360f
+        );
+
+        font.setColor(Color.WHITE);
+
+        drawCenteredOnPlayfield(batch, "--- LEADERBOARD ---", 320f);
+
+        if (scoreboardStatus != null) {
+            drawCenteredOnPlayfield(batch, scoreboardStatus, 295f);
+        }
+
+        for (int i = 0; i < leaderboardLines.size(); i++) {
+            drawCenteredOnPlayfield(
+                batch,
+                leaderboardLines.get(i),
+                265f - i * 24f
+            );
+        }
+
+        drawCenteredOnPlayfield(batch, "Press R to Restart", 120f);
+    }
+
+    private void drawCenteredOnPlayfield(
+        SpriteBatch batch,
+        String text,
+        float y
+    ) {
+        if (text == null) {
+            return;
+        }
+
+        glyphLayout.setText(font, text);
+
+        font.draw(
+            batch,
+            glyphLayout,
+            PLAYFIELD_CENTER_X - glyphLayout.width / 2f,
+            y
+        );
+    }
+
+    public void setStageClear(boolean stageClear) {
+        this.stageClear = stageClear;
+    }
+
+    public void setScoreboardStatus(String status) {
+        this.scoreboardStatus = status;
+    }
+
+    public void showLeaderboard(List<ScoreEntry> entries) {
+        leaderboardLines.clear();
+
+        for (int i = 0; i < entries.size(); i++) {
+            ScoreEntry entry = entries.get(i);
+
+            leaderboardLines.add(
+                (i + 1) + ". " + entry.getPlayerName()
+                    + "  " + String.format("%09d", entry.getPoint())
+            );
+        }
+    }
+
+    public void clearScoreboard() {
+        stageClear = false;
+        scoreboardStatus = null;
+        leaderboardLines.clear();
     }
 
     // Membersihkan resource

@@ -1,6 +1,7 @@
 package com.muhammad_dwi_yudha_utama.backend.repository;
 
 import com.muhammad_dwi_yudha_utama.backend.model.Score;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,9 +18,6 @@ public interface ScoreRepository extends JpaRepository<Score, UUID> {
 
     List<Score> findAllByOrderByCreatedAtDesc();
 
-    @Query(
-        value = "SELECT * FROM scores ORDER BY points DESC LIMIT :limit",
-        nativeQuery = true
-    )
-    List<Score> findTopScores(@Param("limit") Integer limit);
+    @Query("SELECT s FROM Score s ORDER BY s.point DESC")
+    List<Score> findTopScores(Pageable pageable);
 }

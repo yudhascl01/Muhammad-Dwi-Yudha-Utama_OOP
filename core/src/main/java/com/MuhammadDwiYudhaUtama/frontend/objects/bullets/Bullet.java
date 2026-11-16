@@ -8,8 +8,11 @@ import com.MuhammadDwiYudhaUtama.frontend.objects.patterns.bulletStrategy.Bullet
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 
 public class Bullet extends GameObject {
+
+    private static final float PLAYER_SHOT_HITBOX = 12f;
 
     private BulletType bulletType;
     private int damage;
@@ -142,6 +145,19 @@ public class Bullet extends GameObject {
         }
     }
 
+    public Rectangle getShotHitbox() {
+        if (!isPlayerBullet) {
+            return getCoreHitbox();
+        }
+
+        return new Rectangle(
+            x + (width - PLAYER_SHOT_HITBOX) / 2f,
+            y + (height - PLAYER_SHOT_HITBOX) / 2f,
+            PLAYER_SHOT_HITBOX,
+            PLAYER_SHOT_HITBOX
+        );
+    }
+
     public BulletMovementPattern getMovementPattern() {
         return movementPattern;
     }
@@ -178,6 +194,15 @@ public class Bullet extends GameObject {
 
     public void setAngle(float angle) {
         this.angle = angle;
+    }
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
+
+        float rad = (float) Math.toRadians(angle);
+
+        this.vx = (float) Math.cos(rad) * speed;
+        this.vy = (float) Math.sin(rad) * speed;
     }
 
     public boolean hasBeenGrazed() {

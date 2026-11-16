@@ -2,6 +2,7 @@ package com.muhammad_dwi_yudha_utama.backend.service;
 
 import com.muhammad_dwi_yudha_utama.backend.model.Score;
 import com.muhammad_dwi_yudha_utama.backend.repository.ScoreRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,7 +39,9 @@ public class ScoreService {
     }
 
     public List<Score> getLeaderboard(Integer limit) {
-        return scoreRepository.findTopScores(limit);
+        return scoreRepository.findTopScores(
+            PageRequest.of(0, limit)
+        );
     }
 
     public void deleteScore(UUID scoreId) {
